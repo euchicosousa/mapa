@@ -23,6 +23,8 @@ Identificar a referência/URL do projeto final e acesso administrativo disponív
 
 `scripts/validation-run.mjs` cria, por execução, um `run_id`, dois espaços temporários (X, Y) e quatro contas temporárias (A admin X, B membro X, C membro Y, D sem vínculo) com senhas aleatórias mantidas só em memória. Os IDs criados ficam em `.validation-runs/<run_id>.json` (ignorado, sem senhas) e a limpeza remove exatamente esses IDs, na ordem vínculos → perfis → espaços → contas. Dados da equipe real nunca são tocados.
 
+Nos testes de navegador (`playwright.auth.config.ts` e as configs que usam `tests/auth/global-setup.mjs`), cada arquivo de teste, em cada projeto (desktop e mobile), recebe a sua própria execução, criada por `tests/auth/file-run.ts` (ticket 38). Assim, um arquivo que troca a senha de B, aceita um convite ou cria mapas não afeta os outros. A execução global do `globalSetup` serve só para listar os testes e é a "pai" das execuções por arquivo: cada arquivo limpa a sua no `afterAll`, e o teardown global roda `validation-run.mjs cleanup-children <run_id>` para remover qualquer filha que tenha sobrado (por exemplo, de um arquivo com todos os testes pulados). Para uma execução interrompida, `npm run validation:cleanup` limpa todos os registros pendentes.
+
 Antes de criar qualquer recurso, o destino é conferido: `MAPA_PROJECT_REF` precisa bater com a URL de `.env.local`, e a chave precisa ser secreta.
 
 Por decisão do usuário (19/10/2026), as duas variáveis podem ficar no arquivo local `.env.validation`, ignorado pelo git e recusado se não estiver com permissão 600. O Vite não lê esse arquivo e ele não entra no bundle. Variáveis já definidas no terminal têm prioridade. Criar uma vez, digitando a chave sem eco e sem histórico:

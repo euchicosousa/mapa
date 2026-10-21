@@ -1,8 +1,8 @@
+import { fileRun } from './file-run';
 import { expect, test, type Page } from '@playwright/test';
-import type { Account, Run } from '../../scripts/validation-run.mjs';
+import type { Account } from '../../scripts/validation-run.mjs';
 
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run | null;
-if (!run) throw new Error('Execução de validação ausente; rode pelo playwright.auth.config.ts.');
+const run = fileRun();
 const accounts = run.accounts;
 const teamCaption = (account: Account) => `Equipe: ${run.workspaces[account.workspace as 'X' | 'Y'].name}`;
 

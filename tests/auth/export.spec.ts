@@ -1,9 +1,8 @@
+import { fileRun } from './file-run';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import type { Run } from '../../scripts/validation-run.mjs';
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run | null;
-if (!run) throw Error('Execução de validação ausente');
+const run = fileRun();
 const [, b] = run.accounts;
 const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 const saved = (page: Page) => expect(page.locator('.save-state [role="status"]')).toHaveText(/Salvo/);

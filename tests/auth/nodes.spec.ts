@@ -1,8 +1,7 @@
+import { fileRun } from './file-run';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import type { Run } from '../../scripts/validation-run.mjs';
 
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run | null;
-if (!run) throw new Error('Execução de validação ausente; rode pelo playwright.auth.config.ts.');
+const run = fileRun();
 const [a, b] = run.accounts;
 
 async function signIn(page: Page, account: { email: string; password: string }) {

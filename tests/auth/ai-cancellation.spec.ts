@@ -1,9 +1,8 @@
+import { fileRun } from './file-run';
 import { expect, test, type Page } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import type { Run } from '../../scripts/validation-run.mjs';
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run | null;
-if (!run) throw Error('Execução de validação ausente');
+const run = fileRun();
 const [adminAccount, memberAccount] = run.accounts;
 const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 test.skip(process.env.MAPA_AI_VALIDATION !== '1', 'IA real requer liberação das identidades descartáveis.');

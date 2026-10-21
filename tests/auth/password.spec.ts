@@ -1,8 +1,7 @@
 import { spawnSync } from 'node:child_process';
+import { fileRun } from './file-run';
 import { expect, test } from '@playwright/test';
-import type { Run } from '../../scripts/validation-run.mjs';
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run;
-if (!run) throw Error('Validation run required');
+const run = fileRun();
 function link(kind: 'recovery' | 'invite', userId?: string): { link: string; email: string; password: string } {
   const result = spawnSync(process.execPath, ['scripts/password-validation.mjs'], {
     input: JSON.stringify({ runId: run.runId, kind, userId }),

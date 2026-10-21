@@ -176,7 +176,7 @@ Usar o banco final desde o ticket 02. Não haverá Supabase local, staging nem s
 
 ## Pacote 2 — manutenção estrutural
 
-Criado em 21/10/2026 a partir da análise estrutural pedida pelo usuário após a entrega do pacote 01–28. Na análise, typecheck, lint, 129 testes unitários e o audit passaram; nenhum bug funcional foi encontrado. Os riscos são de manutenção futura. O item "projeto fora do git" já foi resolvido (repositório público `euchicosousa/mapa`, por decisão do usuário). Estado: **ready-for-agent**, divisão aprovada pelo usuário em 21/10/2026. **29 e 30 done** (21/10/2026). Desbloqueados agora: 31, 32, 35, 36, 37 e 38 (o 38 foi aprovado depois, no mesmo dia).
+Criado em 21/10/2026 a partir da análise estrutural pedida pelo usuário após a entrega do pacote 01–28. Na análise, typecheck, lint, 129 testes unitários e o audit passaram; nenhum bug funcional foi encontrado. Os riscos são de manutenção futura. O item "projeto fora do git" já foi resolvido (repositório público `euchicosousa/mapa`, por decisão do usuário). Estado: **ready-for-agent**, divisão aprovada pelo usuário em 21/10/2026. **29, 30, 36 e 38 done; 37 in-progress** (falta deploy e Secret scanning), em 21/10/2026. Desbloqueados agora: 31, 32 e 35.
 
 | # | Ticket | Bloqueado por | Por quê |
 | --- | --- | --- | --- |

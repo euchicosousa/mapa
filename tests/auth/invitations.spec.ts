@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process';
+import { fileRun } from './file-run';
 import { expect, test, type Page } from '@playwright/test';
-import type { Run, Account } from '../../scripts/validation-run.mjs';
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run;
-if (!run) throw Error('Validation run required');
+import type { Account } from '../../scripts/validation-run.mjs';
+const run = fileRun();
 const admin = run.accounts.find((a) => a.key === 'A')!;
 async function login(page: Page, account: Account) {
   await page.goto('/login');

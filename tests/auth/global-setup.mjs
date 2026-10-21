@@ -18,6 +18,8 @@ export default async function globalSetup() {
   const { runId } = JSON.parse(output);
   process.env.MAPA_VALIDATION_RUN = output;
   return async () => {
+    // Per-file runs first (tests/auth/file-run.ts), then the run used for test listing.
+    validationRun('cleanup-children', runId);
     validationRun('cleanup', runId);
   };
 }

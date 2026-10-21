@@ -1,8 +1,7 @@
+import { fileRun } from './file-run';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import type { Run } from '../../scripts/validation-run.mjs';
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run | null;
-if (!run) throw Error('Execução ausente');
+const run = fileRun();
 const account = run.accounts[0];
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {

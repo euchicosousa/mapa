@@ -4,7 +4,7 @@
 
 **Blocked by:** nenhum.
 
-**Status:** ready-for-agent — divisão aprovada pelo usuário em 21/10/2026.
+**Status:** done — concluído em 21/10/2026.
 
 **Leitura obrigatória:** [contrato técnico](../CONTRATO-TECNICO.md), seções pertinentes ao domínio desta fatia, [guia do executor](../EXECUCAO.md) e o registro do ticket 30, onde o problema apareceu. As decisões do contrato prevalecem sobre sugestões antigas do plano; instruções novas do usuário prevalecem sobre ambos.
 
@@ -27,9 +27,9 @@ Até aqui, cada ticket rodava a suíte por arquivo, o que escondia o problema.
 
 ## Critérios de aceite
 
-- [ ] `npm run test:e2e:auth` passa inteiro, desktop e mobile, numa única execução.
-- [ ] Rodar duas vezes seguidas também passa, sem resíduos da primeira.
-- [ ] A limpeza final confirma zero contas e equipes da execução no banco final, e o administrador real é preservado.
+- [x] `npm run test:e2e:auth` passa inteiro, desktop e mobile, numa única execução.
+- [x] Rodar duas vezes seguidas também passa, sem resíduos da primeira.
+- [x] A limpeza final confirma zero contas e equipes da execução no banco final, e o administrador real é preservado.
 
 ## Como verificar
 
@@ -45,4 +45,22 @@ Terminal do usuário com a chave secreta para rodar a suíte.
 
 ## Registro do executor
 
-Pendente.
+**Abordagem:** em vez de corrigir só os três arquivos encontrados, cada arquivo de teste, em cada projeto (desktop e mobile), passou a ter a sua própria execução de validação, com contas A–D e equipes X e Y novas. Isso cobre os três casos do contexto e qualquer outro efeito colateral entre arquivos.
+
+- `tests/auth/file-run.ts` (novo): `fileRun()` cria a execução do arquivo num processo filho (`validation-run.mjs create <pai>`), registra `test.afterAll` para limpá-la e a devolve. No processo principal, que só lista os testes (`TEST_WORKER_INDEX` ausente), devolve a execução global, porque ali só importa o formato.
+- Os 19 arquivos `tests/auth/*.spec.ts` trocaram `JSON.parse(process.env.MAPA_VALIDATION_RUN …)` por `fileRun()`. Nenhuma asserção foi alterada: com equipes exclusivas por arquivo, as listas exatas de `ownership.spec.ts` e `maps.spec.ts` voltaram a valer.
+- `scripts/validation-run.mjs`: `createRun(target, parent)` grava `parent` no registro; comando novo `cleanup-children <pai>` remove todas as execuções filhas. `tests/auth/global-setup.mjs` roda `cleanup-children` e depois `cleanup` no teardown, para que nada sobre mesmo quando o `afterAll` não roda (arquivos com todos os testes pulados, como os de IA sem `MAPA_AI_VALIDATION=1`).
+- Documentado em `docs/AUTH-SUPABASE.md`.
+
+O item 1 da implementação (conta exclusiva no `password.spec.ts`) e o item 2 (equipe exclusiva no `invitations.spec.ts`) ficaram resolvidos pela execução por arquivo, sem mudança nesses testes.
+
+**Execuções completas de `playwright test --config playwright.auth.config.ts`** (equivalente a `npm run test:e2e:auth`), rodadas pelo executor com a chave de `.env.validation`:
+1. 101 aprovados, 1 reprovado, 22 pulados (15,5 min). A falha foi em `accessibility.spec.ts:116` no desktop, o segundo teste da execução: o editor não apareceu em 15 s depois de "Novo mapa". O mesmo arquivo, repetido 3 vezes sozinho no desktop, passou 12/12. Causa provável: primeira compilação do chunk do editor pelo servidor de desenvolvimento do Vite. Não está ligada ao isolamento e não foi tratada aqui.
+2. **102 aprovados, 0 reprovados**, 22 pulados (15,6 min).
+3. **102 aprovados, 0 reprovados**, 22 pulados (15,3 min).
+
+As execuções 2 e 3 cumprem o critério das duas execuções seguidas. Os 22 pulados são os testes de IA paga (`ai.spec`, `ai-limits.spec` e `ai-cancellation.spec`), que só rodam com `MAPA_AI_VALIDATION=1`, por decisão anterior; não foram executados.
+
+**Limpeza:** `.validation-runs/` vazio depois de cada execução. A consulta no banco final confirma 0 contas `mapa-validacao-…`/`mapa-link-…`, 0 equipes "Validação …", 1 conta no total e 1 administrador ativo, que é o real, preservado. Antes da primeira execução havia um registro pendente da execução do usuário às 19:19 (`20261021-4bb261`: 5 contas e 2 equipes temporárias); foi limpo com `validation-run.mjs cleanup`.
+
+Typecheck, lint e `format:check` sem erros.

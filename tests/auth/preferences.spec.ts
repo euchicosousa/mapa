@@ -1,7 +1,6 @@
+import { fileRun } from './file-run';
 import { expect, test, type Page, type BrowserContext } from '@playwright/test';
-import type { Run } from '../../scripts/validation-run.mjs';
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run | null;
-if (!run) throw Error('Execução de validação ausente');
+const run = fileRun();
 const [a, b] = run.accounts;
 type Doc = { map: { id: string; revision: number }; nodes: { id: string; parentId: string | null; text: string }[] };
 type View = { viewport: { x: number; y: number; zoom: number }; collapsed_node_ids: string[] };

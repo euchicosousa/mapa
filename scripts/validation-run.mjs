@@ -62,9 +62,10 @@ async function saveRecord(record) {
   await writeFile(recordPath(record.runId), JSON.stringify(record, null, 2), { mode: 0o600 });
 }
 
-export async function createRun(target) {
+export async function createRun(target, parent = null) {
   const runId = `${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${randomBytes(3).toString('hex')}`;
-  const record = { runId, ref: target.ref, createdAt: new Date().toISOString(), workspaces: [], users: [] };
+  // A per-file run names the global run as parent, so teardown can always remove it.
+  const record = { runId, ref: target.ref, parent, createdAt: new Date().toISOString(), workspaces: [], users: [] };
   const admin = adminClient(target);
   const run = { runId, workspaces: {}, accounts: [] };
   try {
@@ -161,6 +162,18 @@ export async function cleanupRun(target, runId) {
   return record;
 }
 
+// Removes every run created under `parent`, even ones whose own cleanup never ran.
+export async function cleanupChildren(target, parent) {
+  if (!/^\d{8}-[a-f0-9]{6}$/.test(parent ?? '')) throw Error('Execução pai inválida.');
+  const files = await readdir(runsDir).catch(() => []);
+  const cleaned = [];
+  for (const file of files.filter((name) => name.endsWith('.json'))) {
+    const record = JSON.parse(await readFile(`${runsDir}/${file}`, 'utf8'));
+    if (record.parent === parent) cleaned.push((await cleanupRun(target, record.runId)).runId);
+  }
+  return cleaned;
+}
+
 export async function cleanupPending(target) {
   const files = await readdir(runsDir).catch(() => []);
   const cleaned = [];
@@ -191,7 +204,11 @@ const [command, runId] = process.argv.slice(2);
 if (import.meta.url === `file://${process.argv[1]}`) {
   const actions = {
     'membership-status': async () => setValidationMembership(readTarget(), runId, process.argv[4], process.argv[5]),
-    create: async () => process.stdout.write(JSON.stringify(await createRun(readTarget()))),
+    create: async () => process.stdout.write(JSON.stringify(await createRun(readTarget(), runId ?? null))),
+    'cleanup-children': async () => {
+      const runs = await cleanupChildren(readTarget(), runId);
+      console.error(`Execuções filhas limpas: ${runs.length}.`);
+    },
     cleanup: async () => {
       if (runId) {
         await cleanupRun(readTarget(), runId);
@@ -203,7 +220,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   };
   if (!actions[command]) {
     console.error(
-      'Uso: validation-run.mjs create | cleanup [run_id] | membership-status run_id user_id active|inactive',
+      'Uso: validation-run.mjs create [run_id_pai] | cleanup [run_id] | cleanup-children run_id_pai | membership-status run_id user_id active|inactive',
     );
     process.exitCode = 1;
   } else

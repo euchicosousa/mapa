@@ -1,9 +1,8 @@
+import { fileRun } from './file-run';
 import { expect, test, type Page, type BrowserContext } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import type { Run } from '../../scripts/validation-run.mjs';
-const run = JSON.parse(process.env.MAPA_VALIDATION_RUN ?? 'null') as Run | null;
-if (!run) throw new Error('Execução de validação ausente.');
+const run = fileRun();
 const [a, b] = run.accounts;
 const state = (page: Page) => page.locator('.save-state [role="status"]');
 const canvasText = (page: Page, text: string) => page.locator('.react-flow__node').getByText(text, { exact: true });
