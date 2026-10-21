@@ -4,7 +4,7 @@
 
 **Blocked by:** 29: Padronizar a formatação do código; 32: Decidir o escopo dos rascunhos offline
 
-**Status:** draft
+**Status:** ready-for-agent — divisão aprovada pelo usuário em 21/10/2026.
 
 **Leitura obrigatória:** [contrato técnico](../CONTRATO-TECNICO.md), seções pertinentes ao domínio desta fatia, [guia do executor](../EXECUCAO.md) e a análise estrutural de 21/10/2026 que originou este pacote (resumida no [README](../README.md#pacote-2--manutenção-estrutural)). As decisões do contrato prevalecem sobre sugestões antigas do plano; instruções novas do usuário prevalecem sobre ambos.
 
