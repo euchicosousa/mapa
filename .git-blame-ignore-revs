@@ -1,0 +1,3 @@
+# Commits só de formatação, ignorados pelo git blame (git config blame.ignoreRevsFile .git-blame-ignore-revs)
+# Ticket 29: Prettier
+7f3e3edc0e35adef103d23034381c697fa7017e8
