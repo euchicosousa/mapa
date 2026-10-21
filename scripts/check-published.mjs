@@ -58,6 +58,16 @@ for (const route of [
     htmlSha256: createHash('sha256').update(html).digest('hex'),
   });
 }
+// Unhashed files in public/ get a short cache; only HTML routes stay no-store.
+for (const path of ['/brand/mapa.svg', '/brand/mapa-inverso.svg']) {
+  const response = await globalThis.fetch(origin + path);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /image\/svg\+xml/);
+  assert.equal(response.headers.get('cache-control'), 'public, max-age=86400');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  evidence.routes.push({ route: path, status: response.status, cache: response.headers.get('cache-control') });
+}
+assert.equal((await globalThis.fetch(origin + '/brand/inexistente.svg')).status, 404);
 const checked = new Set();
 let backendFound = false,
   aiEndpointFound = false;
@@ -82,7 +92,7 @@ while (checked.size < assets.size) {
       sha256: createHash('sha256').update(text).digest('hex'),
     });
     if (path.endsWith('.js')) {
-      const version = text.match(/0\.1\.0\+\d{4}-\d{2}-\d{2}T[\d:.]+Z/);
+      const version = text.match(/\d+\.\d+\.\d+\+\d{4}-\d{2}-\d{2}T[\d:.]+Z/);
       if (version) evidence.version = version[0];
     }
   }

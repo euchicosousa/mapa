@@ -4,7 +4,7 @@
 
 **Blocked by:** nenhum.
 
-**Status:** ready-for-agent — divisão aprovada pelo usuário em 21/10/2026.
+**Status:** in-progress — feito o que não depende de publicação; faltam o deploy (para conferir os headers) e a ativação do Secret scanning pelo usuário.
 
 **Leitura obrigatória:** [contrato técnico](../CONTRATO-TECNICO.md), seções pertinentes ao domínio desta fatia, [guia do executor](../EXECUCAO.md) e a análise estrutural de 21/10/2026 que originou este pacote (resumida no [README](../README.md#pacote-2--manutenção-estrutural)). As decisões do contrato prevalecem sobre sugestões antigas do plano; instruções novas do usuário prevalecem sobre ambos.
 
@@ -18,10 +18,10 @@
 
 ## Critérios de aceite
 
-- [ ] A versão exibida acompanha o `package.json`.
-- [ ] `npm test` passa com o mesmo número de testes e tempo total menor (registrar antes e depois).
-- [ ] Os headers publicados conferem com a regra nova (`npm run test:deployment-config` atualizado).
-- [ ] A raiz fica sem artefatos de build e de relatório.
+- [x] A versão exibida acompanha o `package.json`.
+- [x] `npm test` passa com o mesmo número de testes e tempo total menor (registrar antes e depois).
+- [ ] Os headers publicados conferem com a regra nova. *O teste dessa regra é `scripts/check-published.mjs` (`npm run test:published`), não `test:deployment-config`, que confere Auth e CORS.* Só pode ser conferido depois do deploy.
+- [x] A raiz fica sem artefatos de build e de relatório. *Exceções intencionais:* `playwright-auth-report/` e `test-results/`, da execução do ticket 30, mantidos até o ticket 38 gerar novos; `dist/`, recriado a cada build.
 - [ ] Secret scanning e Push protection ativos, confirmados pelo usuário.
 
 ## Como verificar
@@ -38,4 +38,10 @@ Deploy na Vercel para conferir os headers; acesso do usuário às configuraçõe
 
 ## Registro do executor
 
-Pendente.
+1. **Versão:** `vite.config.ts` importa `version` do `package.json`; o build gerou `0.1.0+2026-10-21T22:57:04.335Z`. O `scripts/check-published.mjs` deixou de procurar `0.1.0` fixo e aceita qualquer versão `x.y.z+data`.
+2. **Vitest:** `pool: 'vmThreads'` em `vitest.config.ts`. Medição com cache quente (a primeira medição da análise, 17,7 s, era a execução a frio): `threads` (padrão) 2,25–2,56 s; `forks` 2,58–2,60 s; `vmThreads` 0,99–1,09 s em três execuções seguidas, sempre com 131/131. Cada arquivo continua num contexto de VM próprio.
+3. **Cache de `public/`:** em `vercel.json`, a regra `no-store` passou a excluir `brand/`, e `/brand/(.*)` ganhou `public, max-age=86400`. O rewrite da SPA também passou a excluir `brand/`: um SVG inexistente responde 404, em vez de servir o HTML com um dia de cache. `scripts/check-published.mjs` confere os dois SVGs (200, `image/svg+xml`, cache de um dia, `nosniff`) e o 404. Documentado em `docs/DEPLOY.md`. **Não publicado:** a conferência real fica para depois do próximo deploy (`npm run test:published`).
+4. **Limpeza:** `dist-smoke/`, `playwright-report/`, `playwright-accessibility-report/`, `test-results-accessibility/` e `test-results-performance/` foram para a Lixeira do macOS (`~/.Trash/mapa-artefatos-2026-10-21/`), e não apagados de vez, para poderem ser recuperados. Todos são recriados pelas suítes e já eram ignorados pelo git. As seis configs do Playwright continuam separadas: cada uma tem `baseURL`, `webServer`, `globalSetup` e pastas de saída próprias (dev na 4174, build sem configuração na 4173, performance na 4175, site publicado). Unir em `projects` obrigaria um comando a subir todos os servidores, sem ganho real.
+5. **Secret scanning e Push protection:** passo do usuário no GitHub, em Settings → Code security. Pendente.
+
+Verificações: typecheck, lint e `format:check` sem erros; `npm test` 131/131; `vite build` e `test:bundle` aprovados; `node --check scripts/check-published.mjs` ok; `vercel.json` validado como JSON.

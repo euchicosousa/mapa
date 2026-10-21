@@ -9,5 +9,11 @@ export default defineConfig({
       fields: ['VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY'],
     }),
   },
-  test: { environment: 'jsdom', include: ['src/**/*.test.{ts,tsx}'], setupFiles: ['src/test-setup.ts'] },
+  test: {
+    environment: 'jsdom',
+    // One jsdom per worker instead of per file; each file still runs in its own VM context.
+    pool: 'vmThreads',
+    include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['src/test-setup.ts'],
+  },
 });
