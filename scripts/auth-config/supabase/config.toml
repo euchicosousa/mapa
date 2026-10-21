@@ -1,0 +1,7 @@
+# Partial remote configuration: push only these Auth properties. No SMTP secrets.
+project_id = "mapa"
+[auth]
+enable_signup = false
+enable_anonymous_sign_ins = false
+site_url = "https://mapa.cnvt.com.br"
+additional_redirect_urls = ["https://mapa.cnvt.com.br/auth/callback", "http://127.0.0.1:4174", "http://127.0.0.1:4174/auth/callback", "http://127.0.0.1:5173/auth/callback", "http://localhost:5173/auth/callback", "http://127.0.0.1:4173/auth/callback", "http://localhost:4173/auth/callback"]

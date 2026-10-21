@@ -1,0 +1,24 @@
+node_modules/
+dist/
+.env*
+!.env.example
+playwright-report/
+test-results/
+playwright-auth-report/
+**/supabase/.temp/
+**/supabase/.branches/
+.validation-runs/
+dist-smoke/
+playwright-accessibility-report/
+test-results-accessibility/
+test-results-performance/
+
+.vercel/
+.vercel
+
+# Sistema / arquivos soltos
+.DS_Store
+/*.png
+
+# Evidências de validação (capturas grandes); planejamento em .scratch continua versionado
+.scratch/mapa-mental/evidence/

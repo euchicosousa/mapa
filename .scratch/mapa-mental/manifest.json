@@ -1,0 +1,270 @@
+[
+  {
+    "id": 1,
+    "title": "Abrir a SPA responsiva com rotas e estados de configuração",
+    "blocked_by": [],
+    "file": "issues/01-abrir-a-spa-responsiva-com-rotas-e-estados-de-configuracao.md",
+    "status": "done"
+  },
+  {
+    "id": 2,
+    "title": "Entrar com Supabase Auth e reconhecer a equipe",
+    "blocked_by": [
+      1
+    ],
+    "file": "issues/02-entrar-com-supabase-auth-e-reconhecer-a-equipe.md",
+    "status": "done"
+  },
+  {
+    "id": 3,
+    "title": "Recuperar senha e concluir links de autenticação",
+    "blocked_by": [
+      2
+    ],
+    "file": "issues/03-recuperar-senha-e-concluir-links-de-autenticacao.md",
+    "status": "done"
+  },
+  {
+    "id": 4,
+    "title": "Convidar uma pessoa para entrar na equipe",
+    "blocked_by": [
+      3
+    ],
+    "file": "issues/04-convidar-uma-pessoa-para-entrar-na-equipe.md",
+    "status": "done"
+  },
+  {
+    "id": 5,
+    "title": "Criar um mapa com responsável e reabri-lo",
+    "blocked_by": [
+      2
+    ],
+    "file": "issues/05-criar-um-mapa-com-responsavel-e-reabri-lo.md",
+    "status": "done"
+  },
+  {
+    "id": 6,
+    "title": "Criar e editar nós com autoria e salvamento",
+    "blocked_by": [
+      5
+    ],
+    "file": "issues/06-criar-e-editar-nos-com-autoria-e-salvamento.md",
+    "status": "done"
+  },
+  {
+    "id": 7,
+    "title": "Navegar pelo mapa com layout e gestos mobile",
+    "blocked_by": [
+      6
+    ],
+    "file": "issues/07-navegar-pelo-mapa-com-layout-e-gestos-mobile.md",
+    "status": "done"
+  },
+  {
+    "id": 8,
+    "title": "Recuperar rascunhos e resolver conflito sem perda",
+    "blocked_by": [
+      6
+    ],
+    "file": "issues/08-recuperar-rascunhos-e-resolver-conflito-sem-perda.md",
+    "status": "done"
+  },
+  {
+    "id": 9,
+    "title": "Excluir um ramo preservando a integridade do mapa",
+    "blocked_by": [
+      6
+    ],
+    "file": "issues/09-excluir-um-ramo-preservando-a-integridade-do-mapa.md",
+    "status": "done"
+  },
+  {
+    "id": 10,
+    "title": "Desfazer e refazer alterações próprias",
+    "blocked_by": [
+      9
+    ],
+    "file": "issues/10-desfazer-e-refazer-alteracoes-proprias.md",
+    "status": "done"
+  },
+  {
+    "id": 11,
+    "title": "Mover ramos e ordenar irmãos por controles acessíveis",
+    "blocked_by": [
+      7,
+      10
+    ],
+    "file": "issues/11-mover-ramos-e-ordenar-irmaos-por-controles-acessiveis.md",
+    "status": "done"
+  },
+  {
+    "id": 12,
+    "title": "Recolher ramos e lembrar a visualização por pessoa",
+    "blocked_by": [
+      7
+    ],
+    "file": "issues/12-recolher-ramos-e-lembrar-a-visualizacao-por-pessoa.md",
+    "status": "done"
+  },
+  {
+    "id": 13,
+    "title": "Organizar a biblioteca por projeto e responsável",
+    "blocked_by": [
+      5
+    ],
+    "file": "issues/13-organizar-a-biblioteca-por-projeto-e-responsavel.md",
+    "status": "done"
+  },
+  {
+    "id": 14,
+    "title": "Transferir responsabilidade sem restringir a edição",
+    "blocked_by": [
+      5
+    ],
+    "file": "issues/14-transferir-responsabilidade-sem-restringir-a-edicao.md",
+    "status": "done"
+  },
+  {
+    "id": 15,
+    "title": "Desativar acesso de membros preservando autoria",
+    "blocked_by": [
+      4,
+      14
+    ],
+    "file": "issues/15-desativar-acesso-de-membros-preservando-autoria.md",
+    "status": "done"
+  },
+  {
+    "id": 16,
+    "title": "Duplicar mapas para explorar outra direção",
+    "blocked_by": [
+      8
+    ],
+    "file": "issues/16-duplicar-mapas-para-explorar-outra-direcao.md",
+    "status": "done"
+  },
+  {
+    "id": 17,
+    "title": "Excluir mapas com responsável ou administrador",
+    "blocked_by": [
+      14
+    ],
+    "file": "issues/17-excluir-mapas-com-responsavel-ou-administrador.md",
+    "status": "done"
+  },
+  {
+    "id": 18,
+    "title": "Exportar um backup portátil do mapa",
+    "blocked_by": [
+      6
+    ],
+    "file": "issues/18-exportar-um-backup-portatil-do-mapa.md",
+    "status": "done"
+  },
+  {
+    "id": 19,
+    "title": "Importar backup como mapa novo e validado",
+    "blocked_by": [
+      18,
+      16
+    ],
+    "file": "issues/19-importar-backup-como-mapa-novo-e-validado.md",
+    "status": "done"
+  },
+  {
+    "id": 20,
+    "title": "Gerar quatro filhos com IA e inseri-los diretamente",
+    "blocked_by": [
+      8,
+      10,
+      7
+    ],
+    "file": "issues/20-gerar-quatro-filhos-com-ia-e-inseri-los-diretamente.md",
+    "status": "done"
+  },
+  {
+    "id": 21,
+    "title": "Cancelar geração e tratar contexto alterado",
+    "blocked_by": [
+      20,
+      11,
+      17
+    ],
+    "file": "issues/21-cancelar-geracao-e-tratar-contexto-alterado.md",
+    "status": "done"
+  },
+  {
+    "id": 22,
+    "title": "Limitar uso de IA e expor falhas recuperáveis",
+    "blocked_by": [
+      21
+    ],
+    "file": "issues/22-limitar-uso-de-ia-e-expor-falhas-recuperaveis.md",
+    "status": "done"
+  },
+  {
+    "id": 23,
+    "title": "Completar navegação por teclado e acessibilidade mobile",
+    "blocked_by": [
+      11,
+      12,
+      13,
+      19,
+      22
+    ],
+    "file": "issues/23-completar-navegacao-por-teclado-e-acessibilidade-mobile.md",
+    "status": "done"
+  },
+  {
+    "id": 24,
+    "title": "Medir e otimizar edição de mapas com 200 e 500 nós",
+    "blocked_by": [
+      12,
+      22
+    ],
+    "file": "issues/24-medir-e-otimizar-edicao-de-mapas-com-200-e-500-nos.md",
+    "status": "done"
+  },
+  {
+    "id": 25,
+    "title": "Verificar isolamento, autoria e integridade ponta a ponta",
+    "blocked_by": [
+      15,
+      17,
+      19,
+      22
+    ],
+    "file": "issues/25-verificar-isolamento-autoria-e-integridade-ponta-a-ponta.md",
+    "status": "done"
+  },
+  {
+    "id": 26,
+    "title": "Preparar ambiente de publicação com Auth e banco reais",
+    "blocked_by": [
+      4,
+      25
+    ],
+    "file": "issues/26-preparar-ambiente-de-publicacao-com-auth-e-banco-reais.md",
+    "status": "done"
+  },
+  {
+    "id": 27,
+    "title": "Publicar a SPA e validar links diretos",
+    "blocked_by": [
+      23,
+      24,
+      26
+    ],
+    "file": "issues/27-publicar-a-spa-e-validar-links-diretos.md",
+    "status": "done"
+  },
+  {
+    "id": 28,
+    "title": "Validar a versão funcional e entregar operação à equipe",
+    "blocked_by": [
+      27
+    ],
+    "file": "issues/28-validar-a-versao-funcional-e-entregar-operacao-a-equipe.md",
+    "status": "done"
+  }
+]

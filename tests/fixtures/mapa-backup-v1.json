@@ -1,0 +1,12 @@
+{
+  "format": "mapa-mental",
+  "version": 1,
+  "exportedAt": "2026-10-20T12:00:00.000Z",
+  "hasPendingChanges": false,
+  "map": { "title": "Ideias — Café ☕" },
+  "nodes": [
+    { "id": "00000000-0000-4000-8000-000000000001", "parentId": null, "text": "Comunicação 🌎", "sortOrder": 0 },
+    { "id": "00000000-0000-4000-8000-000000000002", "parentId": "00000000-0000-4000-8000-000000000001", "text": "Ação e conexão\n日本語", "sortOrder": 0 },
+    { "id": "00000000-0000-4000-8000-000000000003", "parentId": "00000000-0000-4000-8000-000000000001", "text": "Outra direção", "sortOrder": 1 }
+  ]
+}

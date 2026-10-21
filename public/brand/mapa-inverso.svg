@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 622 613" role="img" aria-labelledby="title desc">
+  <title id="title">MAPA</title>
+  <desc id="desc">Marca MAPA em duas linhas: MA acima de PA, em letras geométricas sem serifa.</desc>
+  <g fill="#fafafa" fill-rule="evenodd">
+    <path d="M10 7H82L150 114 218 7H290V276H215V129L161 214H139L85 129V276H10Z"/>
+    <path transform="translate(352 7) scale(.9642857143 1)" d="M0 269 104 0H176L280 269H200L182 219H98L80 269ZM120 157H160L140 98Z"/>
+    <path d="M10 343H153C238 343 290 379 290 436.5S238 530 153 530H85V613H10ZM85 410V463H153C192 463 215 456 215 436.5S192 410 153 410Z"/>
+    <path transform="translate(352 343.5) scale(.9642857143 1.0018587361)" d="M0 269 104 0H176L280 269H200L182 219H98L80 269ZM120 157H160L140 98Z"/>
+  </g>
+</svg>

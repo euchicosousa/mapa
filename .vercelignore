@@ -1,0 +1,11 @@
+.env*
+.validation-runs/
+.scratch/
+node_modules/
+dist/
+dist-smoke/
+test-results*/
+playwright-*-report/
+playwright-report/
+.DS_Store
+/*.png
