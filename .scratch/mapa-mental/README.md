@@ -176,7 +176,7 @@ Usar o banco final desde o ticket 02. Não haverá Supabase local, staging nem s
 
 ## Pacote 2 — manutenção estrutural
 
-Criado em 21/10/2026 a partir da análise estrutural pedida pelo usuário após a entrega do pacote 01–28. Na análise, typecheck, lint, 129 testes unitários e o audit passaram; nenhum bug funcional foi encontrado. Os riscos são de manutenção futura. O item "projeto fora do git" já foi resolvido (repositório público `euchicosousa/mapa`, por decisão do usuário). Estado: **ready-for-agent**, divisão aprovada pelo usuário em 21/10/2026. **29 done** (21/10/2026). Desbloqueados agora: 30, 32, 35 e 37.
+Criado em 21/10/2026 a partir da análise estrutural pedida pelo usuário após a entrega do pacote 01–28. Na análise, typecheck, lint, 129 testes unitários e o audit passaram; nenhum bug funcional foi encontrado. Os riscos são de manutenção futura. O item "projeto fora do git" já foi resolvido (repositório público `euchicosousa/mapa`, por decisão do usuário). Estado: **ready-for-agent**, divisão aprovada pelo usuário em 21/10/2026. **29 e 30 done** (21/10/2026). Desbloqueados agora: 31, 32, 35, 36 e 37. O 38 entrou depois, em draft.
 
 | # | Ticket | Bloqueado por | Por quê |
 | --- | --- | --- | --- |
@@ -189,5 +189,6 @@ Criado em 21/10/2026 a partir da análise estrutural pedida pelo usuário após 
 | 35 | [Migrar a autenticação para o fluxo PKCE](issues/35-migrar-a-autenticacao-para-pkce.md) | — | Tokens de sessão passam pela URL no fluxo `implicit`. |
 | 36 | [Centralizar os limites do domínio](issues/36-centralizar-os-limites-do-dominio.md) | 30 | Limites duplicados entre cliente, Edge Functions e SQL. |
 | 37 | [Ajustes menores de configuração e limpeza](issues/37-ajustes-menores-de-configuracao-e-limpeza.md) | — | Versão fixa, Vitest lento, cache de `public/`, artefatos na raiz. |
+| 38 | [Isolar os testes E2E autenticados entre arquivos](issues/38-isolar-os-testes-e2e-autenticados-entre-arquivos.md) | — | A suíte inteira falha 41 de 102: arquivos alteram contas e equipes compartilhadas. |
 
 Ordem sugerida: 29 → 30 → 32 (decisão) → 33 → 34; 31, 35, 36 e 37 entram quando seus bloqueadores estiverem done. O 35 e o 31 precisam de entradas externas (templates de e-mail e decisão de retenção, respectivamente).

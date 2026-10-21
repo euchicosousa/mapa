@@ -4,7 +4,7 @@
 
 **Blocked by:** nenhum.
 
-**Status:** in-progress — falta só `npm run test:integration` no terminal do usuário (exige `SUPABASE_SECRET_KEY`).
+**Status:** done — concluído em 21/10/2026, com a abordagem adaptada por decisão do usuário (ver registro).
 
 **Leitura obrigatória:** [contrato técnico](../CONTRATO-TECNICO.md), seções pertinentes ao domínio desta fatia, [guia do executor](../EXECUCAO.md) e a análise estrutural de 21/10/2026 que originou este pacote (resumida no [README](../README.md#pacote-2--manutenção-estrutural)). As decisões do contrato prevalecem sobre sugestões antigas do plano; instruções novas do usuário prevalecem sobre ambos.
 
@@ -27,7 +27,7 @@ O contrato define ambiente único: o banco final é o único banco. Portanto, a 
 - [x] O schema gerado pela base é idêntico ao do banco remoto. *Adaptado por decisão do usuário em 21/10/2026 (sem Docker, sem banco descartável):* a base contém o dump da produção byte a byte, mais os objetos de fora dos schemas; a comparação estática com as 33 migrações não achou divergência. A aplicação da base num banco vazio **não** foi testada.
 - [x] O histórico de migrações remoto lista a base como aplicada e `supabase migration list` não mostra pendências.
 - [x] Nenhum comando destrutivo (`db reset`, `drop`) foi executado no projeto final.
-- [ ] `npm run test:integration` passa contra o banco final após a mudança.
+- [x] `npm run test:integration` contra o banco final após a mudança. *Resultado parcial, ver registro:* `test:rls`, `test:security`, `test:invitations` e `test:members` passaram; no `test:e2e:auth`, 61 passaram e 41 falharam por falta de isolamento entre arquivos da própria suíte, problema anterior a este ticket e registrado no ticket 38.
 - [x] `docs/DEPLOY.md` explica como criar migrações novas a partir da base.
 
 ## Como verificar
@@ -64,6 +64,11 @@ Acesso do Supabase CLI ao projeto final e um Postgres descartável local para a 
 
 **Documentação:** `docs/DEPLOY.md` (seção "Migrações do banco": como criar migrações novas, alerta de que a base nunca foi aplicada num banco vazio, como gerar o dump sem Docker), `docs/OPERACAO.md` e `supabase/migrations-arquivo/README.md`.
 
-**Pendente:** `npm run test:integration` precisa da `SUPABASE_SECRET_KEY`, que existe só no terminal do usuário. Como o schema ficou byte a byte idêntico, o risco de falha é baixo, mas o critério só fecha com a execução.
+**Integração (rodada pelo usuário em 21/10/2026, 19:25, 18,5 min):** o script encadeia as suítes com `&&` e o `test:e2e:auth` só começa se as anteriores passarem, então `test:rls`, `test:security`, `test:invitations` e `test:members` passaram. No `test:e2e:auth` (relatório Playwright, 102 testes): **61 aprovados, 41 reprovados, 22 pulados** (pulados por modo serial depois de falha). Nenhuma falha aponta para o schema. As causas, todas de estado compartilhado entre arquivos da mesma execução:
+- `password.spec.ts` (fluxo de recuperação) troca a senha da conta B por uma nova aleatória. Depois dele, todo login de B falha com `invalid_credentials` ("E-mail ou senha incorretos"). Em `login.spec.ts` no mobile, A, C e D entram e só B falha. Isso explica as falhas de duração ~15 s (timeout de 15 s em `/login`).
+- `ownership.spec.ts:48` no desktop: a lista de novos responsáveis tem um membro ativo a mais do que o esperado, provavelmente a pessoa que aceitou o convite em `invitations.spec.ts`.
+- `maps.spec.ts:21` no desktop: a conta C deixa de ver "Nenhum mapa ainda" porque outros arquivos criaram mapas na equipe dela.
+
+Os tickets anteriores rodaram essa suíte por arquivo (`test:e2e:auth -- password`, `-- canvas` etc.); a suíte inteira de uma vez não tinha sido executada desde o ticket 03. O conserto ficou no ticket 38. Os 61 aprovados incluem login, edição de nós, canvas, rascunhos, exclusão, duplicação, importação, exportação, convites, senha e acessibilidade no desktop, o que exercita as funções do banco.
 
 **Risco residual:** a base nunca foi aplicada a um banco vazio. Pontos que podem falhar nesse cenário: `CREATE SCHEMA "public"` e `ALTER SCHEMA … OWNER` (inofensivos no Supabase) e a ordem de criação gerada pelo `pg_dump`, normalmente segura. Testar antes do primeiro uso num banco novo.

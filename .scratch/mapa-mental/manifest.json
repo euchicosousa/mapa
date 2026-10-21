@@ -279,7 +279,7 @@
     "title": "Consolidar as migrações em uma base",
     "blocked_by": [],
     "file": "issues/30-consolidar-as-migracoes-em-uma-base.md",
-    "status": "in-progress"
+    "status": "done"
   },
   {
     "id": 31,
@@ -338,5 +338,12 @@
     "blocked_by": [],
     "file": "issues/37-ajustes-menores-de-configuracao-e-limpeza.md",
     "status": "ready-for-agent"
+  },
+  {
+    "id": 38,
+    "title": "Isolar os testes E2E autenticados entre arquivos",
+    "blocked_by": [],
+    "file": "issues/38-isolar-os-testes-e2e-autenticados-entre-arquivos.md",
+    "status": "draft"
   }
 ]
