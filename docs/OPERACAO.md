@@ -8,7 +8,7 @@ A referência publicada e o procedimento de rollback estão em [DEPLOY.md](DEPLO
 
 Antes de publicar alterações: testar, compilar, revisar os arquivos enviados e executar o smoke público. Somente URL e chave publicável do Supabase entram na Vercel. A lista de origens e callbacks é exata; não liberar automaticamente URLs de preview. Não colocar segredo em variável `VITE_*`.
 
-Migrações: criar arquivo versionado pela CLI instalada, revisar SQL e dependências, conferir o histórico remoto e aplicar somente arquivos pendentes no projeto final. Verificar tipos e autorização após mudanças. Não editar uma migração já aplicada, reaplicar seed, executar reset ou criar outro banco para contornar uma falha. O estado de referência desta entrega usa 33 migrações; o ticket 28 não acrescenta nenhuma. Rollback do frontend não reverte banco, Auth, funções ou segredos.
+Migrações: criar arquivo versionado pela CLI instalada, revisar SQL e dependências, conferir o histórico remoto e aplicar somente arquivos pendentes no projeto final. Verificar tipos e autorização após mudanças. Não editar uma migração já aplicada, reaplicar seed, executar reset ou criar outro banco para contornar uma falha. O estado de referência desta entrega usa 33 migrações, consolidadas no ticket 30 numa base única (`supabase/migrations/20261021185253_base.sql`); o passo a passo de novas migrações está em [DEPLOY.md](DEPLOY.md#migrações-do-banco). Rollback do frontend não reverte banco, Auth, funções ou segredos.
 
 ## Configuração preservada
 

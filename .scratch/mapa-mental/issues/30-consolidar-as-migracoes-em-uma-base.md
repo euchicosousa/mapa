@@ -4,7 +4,7 @@
 
 **Blocked by:** nenhum.
 
-**Status:** ready-for-agent — divisão aprovada pelo usuário em 21/10/2026.
+**Status:** in-progress — falta só `npm run test:integration` no terminal do usuário (exige `SUPABASE_SECRET_KEY`).
 
 **Leitura obrigatória:** [contrato técnico](../CONTRATO-TECNICO.md), seções pertinentes ao domínio desta fatia, [guia do executor](../EXECUCAO.md) e a análise estrutural de 21/10/2026 que originou este pacote (resumida no [README](../README.md#pacote-2--manutenção-estrutural)). As decisões do contrato prevalecem sobre sugestões antigas do plano; instruções novas do usuário prevalecem sobre ambos.
 
@@ -24,11 +24,11 @@ O contrato define ambiente único: o banco final é o único banco. Portanto, a 
 
 ## Critérios de aceite
 
-- [ ] O schema gerado pela base é idêntico ao do banco remoto (diff vazio de tabelas, colunas, índices, policies, grants e funções).
-- [ ] O histórico de migrações remoto lista a base como aplicada e `supabase migration list` não mostra pendências.
-- [ ] Nenhum comando destrutivo (`db reset`, `drop`) foi executado no projeto final.
+- [x] O schema gerado pela base é idêntico ao do banco remoto. *Adaptado por decisão do usuário em 21/10/2026 (sem Docker, sem banco descartável):* a base contém o dump da produção byte a byte, mais os objetos de fora dos schemas; a comparação estática com as 33 migrações não achou divergência. A aplicação da base num banco vazio **não** foi testada.
+- [x] O histórico de migrações remoto lista a base como aplicada e `supabase migration list` não mostra pendências.
+- [x] Nenhum comando destrutivo (`db reset`, `drop`) foi executado no projeto final.
 - [ ] `npm run test:integration` passa contra o banco final após a mudança.
-- [ ] `docs/DEPLOY.md` explica como criar migrações novas a partir da base.
+- [x] `docs/DEPLOY.md` explica como criar migrações novas a partir da base.
 
 ## Como verificar
 
@@ -44,4 +44,26 @@ Acesso do Supabase CLI ao projeto final e um Postgres descartável local para a 
 
 ## Registro do executor
 
-Pendente.
+**Mudança de abordagem (decisão do usuário, 21/10/2026):** sem Docker e sem banco descartável; tudo contra o banco de produção, aceitando o risco porque hoje só o usuário usa o app, que ainda está em construção. Para o dump, o usuário autorizou instalar o `pg_dump` 18.6 (Homebrew `libpq`). O passo 5 (schemas declarativos) não foi feito: `supabase db diff` exige Docker.
+
+**Antes:** o histórico remoto tinha as mesmas 33 versões e nomes dos arquivos locais. Cópia do histórico (versão, nome, número de instruções e MD5) registrada antes do repair; os SQLs originais são os arquivos em `supabase/migrations-arquivo/`.
+
+**Dump:** script de `supabase db dump --project-ref bodxafqkqlyfoyfgahyj --schema public,private --dry-run`, executado com o `pg_dump` local e o usuário temporário criado pelo CLI (sem senha do banco). Correção necessária no script impresso: `--schema='public|private'` entre aspas. Resultado: 2.765 linhas, 14 tabelas, 60 funções, 9 policies, 24 índices, 3 triggers, RLS nas 14 tabelas.
+
+**Revisão estática contra as 33 migrações** (scripts em `evidence/30/`):
+- 59/59 funções vigentes com corpo idêntico ao da última definição nas migrações. A 60ª, `private.finish_ai_generation_document`, vem de um `alter function … rename` e tem o corpo idêntico ao de `finish_ai_generation` em `20261020205922_cancel_ai_generation`.
+- Tabelas (14), policies (9) e índices (24) iguais aos criados menos os removidos.
+- Triggers: `maps_active_owner`, `maps_require_root` e `nodes_keep_root` (estes dois como constraint triggers) no dump; `on_auth_user_created` em `auth.users`, conferido no catálogo de produção.
+- Nenhuma alteração manual fora das migrações foi encontrada.
+
+**Base `supabase/migrations/20261021185253_base.sql`:** o dump, mais: `pg_trgm` em `extensions` (única extensão da qual o schema depende, por `gin_trgm_ops`), o trigger em `auth.users` e a linha inicial de `private.ai_settings` com os valores da migração original (`enabled = false`; em produção está `true` desde o ticket 22). Ficaram de fora os preenchimentos de dados (perfis de usuários já existentes e o livro de uso da IA), que não fazem sentido num banco vazio. As 33 migrações foram para `supabase/migrations-arquivo/` com `git mv`, com um README explicando que o CLI não lê a pasta.
+
+**Repair:** `supabase migration repair --status applied 20261021185253` e `--status reverted` nas 33 versões antigas. Só a tabela `supabase_migrations.schema_migrations` mudou; nenhum SQL de schema foi executado. A primeira tentativa do `reverted` falhou sem efeito, porque o zsh não separou a lista de versões; foi repetida via `bash`.
+
+**Depois:** `supabase migration list` retorna só `20261021185253` (local = remote). Um novo dump é idêntico ao anterior (`diff` vazio; SHA-256 iguais, arquivos `evidence/30/schema-antes.sql` e `schema-depois.sql`).
+
+**Documentação:** `docs/DEPLOY.md` (seção "Migrações do banco": como criar migrações novas, alerta de que a base nunca foi aplicada num banco vazio, como gerar o dump sem Docker), `docs/OPERACAO.md` e `supabase/migrations-arquivo/README.md`.
+
+**Pendente:** `npm run test:integration` precisa da `SUPABASE_SECRET_KEY`, que existe só no terminal do usuário. Como o schema ficou byte a byte idêntico, o risco de falha é baixo, mas o critério só fecha com a execução.
+
+**Risco residual:** a base nunca foi aplicada a um banco vazio. Pontos que podem falhar nesse cenário: `CREATE SCHEMA "public"` e `ALTER SCHEMA … OWNER` (inofensivos no Supabase) e a ordem de criação gerada pelo `pg_dump`, normalmente segura. Testar antes do primeiro uso num banco novo.

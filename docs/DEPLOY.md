@@ -30,7 +30,22 @@ Referência publicada: `dpl_2qdMEvn4UEELuRscohiVBnqcFCJz`, URL imutável `https:
 
 Esta é a primeira publicação. O primeiro deploy de validação apresentou uma disputa entre navegação de histórico e saída da conta; ele foi substituído e não é referência de recuperação. O deploy final aprovado deve ser usado como referência para versões futuras. Não há versão anterior comprovadamente estável para restaurar antes dessa referência.
 
-Rollback do frontend não restaura banco, dados, migrações, funções Edge, Auth ou segredos. Neste ticket não houve migração; o frontend exige as mesmas 33 migrações já verificadas no ticket 26. Nunca executar reset, seed ou rollback destrutivo do banco para acompanhar uma troca de frontend. Limitações de backup estão registradas em PUBLICACAO.md.
+Rollback do frontend não restaura banco, dados, migrações, funções Edge, Auth ou segredos. Neste ticket não houve migração; o frontend exige as mesmas 33 migrações já verificadas no ticket 26, consolidadas desde o ticket 30 na base `20261021185253_base.sql`, sem mudança de schema. Nunca executar reset, seed ou rollback destrutivo do banco para acompanhar uma troca de frontend. Limitações de backup estão registradas em PUBLICACAO.md.
+
+## Migrações do banco
+
+Desde 21/10/2026 (ticket 30), `supabase/migrations/` começa por uma única base, `20261021185253_base.sql`. Ela reproduz o schema de produção que as 33 migrações de 19–20/10 tinham produzido. Essas migrações antigas ficam em `supabase/migrations-arquivo/` só como histórico: o CLI não as lê, e o histórico remoto as marca como `reverted`. Não mover esses arquivos de volta.
+
+Para criar uma mudança nova:
+
+1. `npx supabase migration new <nome_curto>` cria `supabase/migrations/<timestamp>_<nome_curto>.sql`, com timestamp posterior à base.
+2. Escrever o SQL. Para alterar uma função, copiar a definição vigente da base (ou da migração mais recente que a tocou) e usar `create or replace`. Não editar a base nem uma migração já aplicada.
+3. Conferir o histórico: `npx supabase migration list --project-ref bodxafqkqlyfoyfgahyj`. Só o arquivo novo pode aparecer como pendente.
+4. Aplicar: `npx supabase db push --project-ref bodxafqkqlyfoyfgahyj`. Depois, atualizar os tipos com `npm run db:types`.
+
+A base nunca foi aplicada a um banco vazio: em produção ela foi só registrada como aplicada (`supabase migration repair --status applied`), porque o schema já existia. Antes de usá-la para criar um banco novo (outro projeto, branch do Supabase ou ambiente local), testar a aplicação completa nesse banco novo e corrigir o que falhar numa migração nova, nunca na base. Em banco novo, a IA começa desligada (`private.ai_settings.enabled = false`); em produção ela está ligada desde o ticket 22.
+
+Para gerar de novo o retrato do schema (para comparação, não para substituir a base): `npx supabase db dump --project-ref bodxafqkqlyfoyfgahyj --schema public,private --dry-run` imprime o script do `pg_dump`, que roda sem Docker com o `pg_dump` do pacote Homebrew `libpq`. Sem a flag, o CLI tenta usar Docker.
 
 ## Fontes consultadas
 
