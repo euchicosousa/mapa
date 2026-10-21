@@ -1,3 +1,4 @@
+import { ENTITY_NAME_MAX } from '../maps/limits';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Form,
@@ -45,7 +46,7 @@ export function LibraryPage() {
   const maps = useQuery({
     queryKey: ['maps', access.userId, access.workspace.id, filters],
     queryFn: ({ signal }) => listLibrary(access.workspace.id, filters, signal),
-    enabled: filters.query.length <= 120,
+    enabled: filters.query.length <= ENTITY_NAME_MAX,
     staleTime: 0,
     retry: false,
   });
@@ -62,7 +63,7 @@ export function LibraryPage() {
     retry: false,
   });
   useEffect(() => {
-    if (search === filters.query || search.length > 120) return;
+    if (search === filters.query || search.length > ENTITY_NAME_MAX) return;
     const timer = setTimeout(
       () =>
         setParams((current) => librarySearch({ ...parseLibraryFilters(current), query: search, page: 1 }), {
@@ -83,7 +84,7 @@ export function LibraryPage() {
     setParams(new URLSearchParams());
   };
   const data = maps.data,
-    invalid = search.length > 120;
+    invalid = search.length > ENTITY_NAME_MAX;
   return (
     <Page title="Seus mapas" eyebrow="Biblioteca">
       <div className="library-actions">
@@ -170,7 +171,7 @@ export function LibraryPage() {
       </form>
       {invalid && (
         <p className="form-error" role="alert">
-          A busca pode ter até 120 caracteres. Seu texto foi mantido para você ajustar.
+          A busca pode ter até {ENTITY_NAME_MAX} caracteres. Seu texto foi mantido para você ajustar.
         </p>
       )}
       {(projects.isError || owners.isError) && (

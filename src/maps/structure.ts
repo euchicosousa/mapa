@@ -1,4 +1,5 @@
 import type { MapNode } from './api';
+import { MAP_DEPTH_MAX } from './limits';
 
 export const siblingOrder = (a: MapNode, b: MapNode) =>
   a.sortOrder - b.sortOrder || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -64,7 +65,7 @@ export function reorganize(
     let depth = 0;
     while (current?.parentId) {
       current = byId.get(current.parentId);
-      if (!current || ++depth > 30) return null;
+      if (!current || ++depth > MAP_DEPTH_MAX) return null;
     }
   }
   return result;

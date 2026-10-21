@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import type { MapNode } from './api';
+import { MAP_DEPTH_MAX, MAP_NODES_MAX, MAP_TITLE_MAX, NODE_TEXT_MAX } from './limits';
 
 export const BACKUP_MAX_BYTES = 2 * 1024 * 1024;
 const text = (max: number) => z.string().refine((value) => value.trim() !== '' && [...value].length <= max);
 const portableNode = z.strictObject({
   id: z.uuid(),
   parentId: z.uuid().nullable(),
-  text: text(500),
+  text: text(NODE_TEXT_MAX),
   sortOrder: z.number().int().min(0).max(2147483647),
 });
 // A finite, portable format. IDs relate nodes inside this file, never grant access.
@@ -16,8 +17,8 @@ export const portableBackupSchema = z
     version: z.literal(1),
     exportedAt: z.iso.datetime(),
     hasPendingChanges: z.boolean(),
-    map: z.strictObject({ title: text(120) }),
-    nodes: z.array(portableNode).min(1).max(500),
+    map: z.strictObject({ title: text(MAP_TITLE_MAX) }),
+    nodes: z.array(portableNode).min(1).max(MAP_NODES_MAX),
   })
   .superRefine((backup, context) => {
     const byId = new Map(backup.nodes.map((node) => [node.id, node]));
@@ -36,7 +37,7 @@ export const portableBackupSchema = z
     for (let index = 0; index < queue.length; index++) {
       const current = queue[index];
       if (seen.has(current.id)) return fail('O mapa contém um ciclo.');
-      if (current.depth > 30) return fail('O mapa ultrapassa 30 níveis de profundidade.');
+      if (current.depth > MAP_DEPTH_MAX) return fail(`O mapa ultrapassa ${MAP_DEPTH_MAX} níveis de profundidade.`);
       seen.add(current.id);
       for (const id of children.get(current.id) ?? []) queue.push({ id, depth: current.depth + 1 });
     }
@@ -65,7 +66,8 @@ export async function readPortableBackup(file: Pick<File, 'size' | 'arrayBuffer'
   if (!parsed.success) {
     const treeIssue = parsed.error.issues.find((issue) => issue.code === 'custom' && issue.path.length === 1);
     throw new Error(
-      treeIssue?.message ?? 'Backup inválido. Confira os campos, IDs, título, textos e o limite de 500 nós.',
+      treeIssue?.message ??
+        `Backup inválido. Confira os campos, IDs, título, textos e o limite de ${MAP_NODES_MAX} nós.`,
     );
   }
   return parsed.data;
@@ -104,7 +106,7 @@ export function createPortableBackup(
     const treeIssue = parsed.error.issues.find((issue) => issue.code === 'custom' && issue.path.length === 1);
     throw new Error(
       treeIssue?.message ??
-        'Confira o título (1–120 caracteres) e os textos (1–500 caracteres, sem ficar em branco). Nenhum conteúdo foi cortado.',
+        `Confira o título (1–${MAP_TITLE_MAX} caracteres) e os textos (1–${NODE_TEXT_MAX} caracteres, sem ficar em branco). Nenhum conteúdo foi cortado.`,
     );
   }
   const json = JSON.stringify(parsed.data, null, 2);

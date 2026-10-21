@@ -1,3 +1,4 @@
+import { ENTITY_NAME_MAX } from '../maps/limits';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DraftDialog } from './draft-dialog';
@@ -131,7 +132,9 @@ export function ProjectsDialog({
             onChange={(e) => setClient(e.target.value)}
             aria-invalid={client.trim() !== '' && !validMapTitle(client)}
           />
-          <p className="field-help">Nome e cliente: até 120 caracteres. O nome não pode ficar em branco.</p>
+          <p className="field-help">
+            Nome e cliente: até {ENTITY_NAME_MAX} caracteres. O nome não pode ficar em branco.
+          </p>
           {error && (
             <p className="form-error" role="alert">
               {error}

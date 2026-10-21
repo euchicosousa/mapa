@@ -1,3 +1,6 @@
+import { MAP_TITLE_MAX } from '../maps/limits';
+
+const COPY_SUFFIX = ' — cópia';
 import { notifyAccessDenied } from '../auth/access-events';
 import { create } from 'zustand';
 import {
@@ -763,7 +766,7 @@ export function createEditorStore(
           sourceMapId: state.confirmed.map.id,
           operationId: crypto.randomUUID(),
           editorSessionId,
-          title: `${projectedMap(state.confirmed, state.queue)!.title.slice(0, 112)} — cópia`,
+          title: `${projectedMap(state.confirmed, state.queue)!.title.slice(0, MAP_TITLE_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`,
           nodes: state.nodes.map(({ id, parentId, text, sortOrder }) => ({ id, parentId, text, sortOrder })),
         };
         timers.clearTimeout(textTimer);

@@ -1,5 +1,6 @@
 import type { MapNode } from './api';
 import { subtreeIds } from './structure';
+import { MAP_DEPTH_MAX } from './limits';
 
 export function cleanCollapsed(nodes: MapNode[], ids: string[]): string[] {
   const existing = new Set(nodes.map((node) => node.id));
@@ -24,7 +25,7 @@ export function visibleAncestor(nodes: MapNode[], visible: MapNode[], selectedId
   const shown = new Set(visible.map((node) => node.id));
   const byId = new Map(nodes.map((node) => [node.id, node]));
   let id: string | null = selectedId;
-  for (let depth = 0; id && depth <= 30; depth++) {
+  for (let depth = 0; id && depth <= MAP_DEPTH_MAX; depth++) {
     if (shown.has(id)) return id;
     id = byId.get(id)?.parentId ?? null;
   }

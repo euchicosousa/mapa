@@ -1,3 +1,4 @@
+import { MAP_TITLE_MAX } from '../maps/limits';
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DraftDialog } from './draft-dialog';
@@ -72,7 +73,7 @@ export function MapDetailsDialog({
             onChange={(e) => setTitle(e.target.value)}
           />
           <p id="map-title-help" className={valid ? 'field-help' : 'form-error'}>
-            {title.length}/120 · O título não pode ficar em branco.
+            {title.length}/{MAP_TITLE_MAX} · O título não pode ficar em branco.
           </p>
           <button className="button" disabled={!valid || frozen || title === map.title}>
             Salvar título

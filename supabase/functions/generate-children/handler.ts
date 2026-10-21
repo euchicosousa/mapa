@@ -1,3 +1,4 @@
+import { AI_GUIDANCE_MAX } from '../_shared/limits.ts';
 import { withAllowedOrigins } from '../_shared/cors.ts';
 import { generateChildren, ProviderError, type AIContext, type Usage } from './provider.ts';
 export type GenerationJob = {
@@ -110,7 +111,7 @@ export function createGenerationHandler(deps: {
       ) ||
       ![body.mapId, body.parentNodeId, body.generationId, body.editorSessionId].every(uuid) ||
       typeof body.guidance !== 'string' ||
-      [...body.guidance].length > 1000
+      [...body.guidance].length > AI_GUIDANCE_MAX
     )
       return json({ error: 'VALIDATION' }, 400);
     if (!configured) return json({ error: 'AI_CONFIG_MISSING' }, 503);

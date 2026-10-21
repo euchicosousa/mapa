@@ -1,3 +1,4 @@
+import { MAP_DEPTH_MAX, MAP_NODES_MAX } from '../maps/limits';
 import { AIGenerationControls } from './ai-generation';
 import { MapDetailsDialog } from './map-details';
 import { MapExport } from './map-export';
@@ -138,7 +139,7 @@ const failureText: Partial<Record<MapErrorCode, string>> = {
   NOT_FOUND: 'Este mapa não está mais disponível para a sua conta.',
   FORBIDDEN: 'Sua conta não pode editar este mapa.',
   VALIDATION: 'O servidor recusou esta alteração. Confira o texto e tente novamente.',
-  LIMIT_EXCEEDED: 'O mapa atingiu o limite de 500 nós ou 30 níveis.',
+  LIMIT_EXCEEDED: `O mapa atingiu o limite de ${MAP_NODES_MAX} nós ou ${MAP_DEPTH_MAX} níveis.`,
 };
 
 export function Component() {
@@ -1256,7 +1257,7 @@ function MoveDialog({
                   <strong>{entry.text}</strong>
                   <small>
                     {entry.path}
-                    {tooDeep ? ' — excede 30 níveis' : ''}
+                    {tooDeep ? ` — excede ${MAP_DEPTH_MAX} níveis` : ''}
                   </small>
                 </span>
               </label>
@@ -1277,7 +1278,7 @@ function MoveDialog({
             if (move(node.id, parentId)) onClose();
             else
               setError(
-                'Não foi possível mover para este pai. Verifique o limite de 30 níveis e as alterações pendentes.',
+                `Não foi possível mover para este pai. Verifique o limite de ${MAP_DEPTH_MAX} níveis e as alterações pendentes.`,
               );
           }}
         >

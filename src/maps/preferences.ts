@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import { MapError, toMapError } from './api';
+import { MAP_NODES_MAX } from './limits';
 
 export const viewportSchema = z
   .object({ x: z.number().min(-1e9).max(1e9), y: z.number().min(-1e9).max(1e9), zoom: z.number().min(0.001).max(2) })
   .strict();
-export const viewSchema = z.object({ viewport: viewportSchema, collapsedIds: z.array(z.uuid()).max(500) });
+export const viewSchema = z.object({ viewport: viewportSchema, collapsedIds: z.array(z.uuid()).max(MAP_NODES_MAX) });
 export type ViewPreferences = z.infer<typeof viewSchema>;
 export type Viewport = ViewPreferences['viewport'];
 export async function readView(userId: string, mapId: string, signal: AbortSignal): Promise<ViewPreferences | null> {

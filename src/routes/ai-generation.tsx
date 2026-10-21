@@ -1,3 +1,4 @@
+import { AI_GUIDANCE_MAX } from '../maps/limits';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   aiAvailable,
@@ -250,7 +251,7 @@ export function AIGenerationControls({ nodeId }: { nodeId: string }) {
           cancelling ||
           cancelUnknown ||
           status !== 'saved' ||
-          guidance.length > 1000
+          guidance.length > AI_GUIDANCE_MAX
         }
         onClick={() => void submit()}
       >

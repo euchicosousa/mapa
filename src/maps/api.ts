@@ -3,6 +3,7 @@ import { editorSessionId } from './editor-session';
 export { editorSessionId } from './editor-session';
 import { supabase } from '../lib/supabase';
 import type { PortableBackup } from './backup';
+import { MAP_TITLE_MAX, NODE_TEXT_MAX } from './limits';
 
 export const mapErrorCodes = [
   'UNAUTHENTICATED',
@@ -61,7 +62,7 @@ export const mapDocument = z.object({
 });
 export type MapDocument = z.infer<typeof mapDocument>;
 export type MapNode = z.infer<typeof node>;
-export const NODE_TEXT_MAX = 500;
+export { NODE_TEXT_MAX };
 // Same rule as the server: plain text, 1–500 characters, not blank. Never truncated.
 export const validNodeText = (text: string) => text.length >= 1 && text.length <= NODE_TEXT_MAX && text.trim() !== '';
 
@@ -108,7 +109,7 @@ export type HistoryRequest = {
   mode: 'undo' | 'redo';
 };
 export type HistoryAction = (request: HistoryRequest, signal: AbortSignal) => Promise<CommandResult>;
-export const validMapTitle = (text: string) => text.length >= 1 && text.length <= 120 && text.trim() !== '';
+export const validMapTitle = (text: string) => text.length >= 1 && text.length <= MAP_TITLE_MAX && text.trim() !== '';
 
 function client() {
   if (!supabase) throw new MapError('UNAVAILABLE');

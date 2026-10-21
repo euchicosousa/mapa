@@ -1,8 +1,13 @@
 import { z } from 'zod';
 import { mapDocument } from './api';
 import { editorSessionId } from './editor-session';
+import { MAP_NODES_MAX, MAP_TITLE_MAX } from './limits';
 
-const index = z.number().int().min(0).max(499);
+const index = z
+  .number()
+  .int()
+  .min(0)
+  .max(MAP_NODES_MAX - 1);
 const payload = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('delete_map'), payload: z.object({}).strict() }),
   z.object({ kind: z.literal('transfer_owner'), payload: z.object({ ownerId: z.uuid() }) }),
@@ -34,7 +39,7 @@ const copy = z.object({
   sourceMapId: z.uuid(),
   operationId: z.uuid(),
   editorSessionId: z.uuid(),
-  title: z.string().min(1).max(120),
+  title: z.string().min(1).max(MAP_TITLE_MAX),
   nodes: z
     .array(
       z.object({
@@ -44,7 +49,7 @@ const copy = z.object({
         sortOrder: z.number().int().nonnegative(),
       }),
     )
-    .max(500),
+    .max(MAP_NODES_MAX),
 });
 const history = z.object({
   mapId: z.uuid(),

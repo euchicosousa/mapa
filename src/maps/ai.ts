@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import { commandResult, editorSessionId, toMapError, MapError } from './api';
+import { MAP_DEPTH_MAX, MAP_NODES_MAX } from './limits';
 export const generationSchema = z.object({
   id: z.uuid(),
   mapId: z.uuid(),
@@ -94,7 +95,7 @@ export const aiErrorText: Record<string, string> = {
   AI_BUSY: 'Você já tem uma geração em andamento. Aguarde a conclusão.',
   AI_LIMIT: 'O limite de uso da IA foi atingido. Tente novamente mais tarde.',
   AI_CONTEXT_TOO_LONG: 'O contexto deste ramo é muito longo para a IA. Escolha um ramo menor.',
-  LIMIT_EXCEEDED: 'É preciso espaço para quatro nós, dentro dos limites de 500 nós e 30 níveis.',
+  LIMIT_EXCEEDED: `É preciso espaço para quatro nós, dentro dos limites de ${MAP_NODES_MAX} nós e ${MAP_DEPTH_MAX} níveis.`,
   CONTEXT_CHANGED: 'O contexto mudou durante a geração. Nenhum filho foi inserido. Você pode tentar novamente.',
   EXPIRED: 'A geração expirou. Nenhum filho foi inserido. Você pode tentar novamente.',
   INVALID_OUTPUT: 'A resposta da IA não contém quatro caminhos válidos. Nenhum filho foi inserido.',
