@@ -173,3 +173,21 @@ Não há garantia de zero ajustes futuros no mobile: os fluxos já nascem respon
 ## Ambiente único confirmado
 
 Usar o banco final desde o ticket 02. Não haverá Supabase local, staging nem segundo projeto de testes. O frontend continua rodando no computador quando necessário. Ver contrato seção 7 e docs/AUTH-SUPABASE.md para adaptação dos scripts e verificações não destrutivas.
+
+## Pacote 2 — manutenção estrutural
+
+Criado em 21/10/2026 a partir da análise estrutural pedida pelo usuário após a entrega do pacote 01–28. Na análise, typecheck, lint, 129 testes unitários e o audit passaram; nenhum bug funcional foi encontrado. Os riscos são de manutenção futura. O item "projeto fora do git" já foi resolvido (repositório público `euchicosousa/mapa`, por decisão do usuário). Estado: **draft**, divisão ainda não aprovada pelo usuário.
+
+| # | Ticket | Bloqueado por | Por quê |
+| --- | --- | --- | --- |
+| 29 | [Padronizar a formatação do código](issues/29-padronizar-a-formatacao-do-codigo.md) | — | 160 linhas acima de 200 caracteres; Edge Functions quase minificadas. |
+| 30 | [Consolidar as migrações em uma base](issues/30-consolidar-as-migracoes-em-uma-base.md) | — | 33 migrações; `apply_map_history` redefinida 10 vezes. |
+| 31 | [Limitar o crescimento do registro de operações](issues/31-limitar-o-crescimento-do-registro-de-operacoes.md) | 30 | `map_operations` guarda snapshots e nunca é limpa. |
+| 32 | [Decidir o escopo dos rascunhos offline](issues/32-decidir-o-escopo-dos-rascunhos-offline.md) | — | Decisão do usuário; define quanto o 33 pode simplificar. |
+| 33 | [Simplificar o estado do editor](issues/33-simplificar-o-estado-do-editor.md) | 29, 32 | Cerca de 15 flags combinadas; guardas e mesclagem de resultado duplicadas. |
+| 34 | [Dividir a tela do editor em componentes menores](issues/34-dividir-a-tela-do-editor.md) | 33 | `editor.tsx` com 584 linhas; recálculos a cada renderização. |
+| 35 | [Migrar a autenticação para o fluxo PKCE](issues/35-migrar-a-autenticacao-para-pkce.md) | — | Tokens de sessão passam pela URL no fluxo `implicit`. |
+| 36 | [Centralizar os limites do domínio](issues/36-centralizar-os-limites-do-dominio.md) | 30 | Limites duplicados entre cliente, Edge Functions e SQL. |
+| 37 | [Ajustes menores de configuração e limpeza](issues/37-ajustes-menores-de-configuracao-e-limpeza.md) | — | Versão fixa, Vitest lento, cache de `public/`, artefatos na raiz. |
+
+Ordem sugerida: 29 → 30 → 32 (decisão) → 33 → 34; 31, 35, 36 e 37 entram quando seus bloqueadores estiverem done. O 35 e o 31 precisam de entradas externas (templates de e-mail e decisão de retenção, respectivamente).

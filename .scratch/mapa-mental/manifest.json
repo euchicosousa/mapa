@@ -266,5 +266,77 @@
     ],
     "file": "issues/28-validar-a-versao-funcional-e-entregar-operacao-a-equipe.md",
     "status": "done"
+  },
+  {
+    "id": 29,
+    "title": "Padronizar a formatação do código",
+    "blocked_by": [],
+    "file": "issues/29-padronizar-a-formatacao-do-codigo.md",
+    "status": "draft"
+  },
+  {
+    "id": 30,
+    "title": "Consolidar as migrações em uma base",
+    "blocked_by": [],
+    "file": "issues/30-consolidar-as-migracoes-em-uma-base.md",
+    "status": "draft"
+  },
+  {
+    "id": 31,
+    "title": "Limitar o crescimento do registro de operações",
+    "blocked_by": [
+      30
+    ],
+    "file": "issues/31-limitar-o-crescimento-do-registro-de-operacoes.md",
+    "status": "draft"
+  },
+  {
+    "id": 32,
+    "title": "Decidir o escopo dos rascunhos offline",
+    "blocked_by": [],
+    "file": "issues/32-decidir-o-escopo-dos-rascunhos-offline.md",
+    "status": "draft"
+  },
+  {
+    "id": 33,
+    "title": "Simplificar o estado do editor",
+    "blocked_by": [
+      29,
+      32
+    ],
+    "file": "issues/33-simplificar-o-estado-do-editor.md",
+    "status": "draft"
+  },
+  {
+    "id": 34,
+    "title": "Dividir a tela do editor em componentes menores",
+    "blocked_by": [
+      33
+    ],
+    "file": "issues/34-dividir-a-tela-do-editor.md",
+    "status": "draft"
+  },
+  {
+    "id": 35,
+    "title": "Migrar a autenticação para o fluxo PKCE",
+    "blocked_by": [],
+    "file": "issues/35-migrar-a-autenticacao-para-pkce.md",
+    "status": "draft"
+  },
+  {
+    "id": 36,
+    "title": "Centralizar os limites do domínio",
+    "blocked_by": [
+      30
+    ],
+    "file": "issues/36-centralizar-os-limites-do-dominio.md",
+    "status": "draft"
+  },
+  {
+    "id": 37,
+    "title": "Ajustes menores de configuração e limpeza",
+    "blocked_by": [],
+    "file": "issues/37-ajustes-menores-de-configuracao-e-limpeza.md",
+    "status": "draft"
   }
 ]
