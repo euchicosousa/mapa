@@ -4,7 +4,7 @@
 
 **Blocked by:** nenhum.
 
-**Status:** draft
+**Status:** ready-for-agent — divisão aprovada pelo usuário em 21/10/2026.
 
 **Leitura obrigatória:** [contrato técnico](../CONTRATO-TECNICO.md), seções pertinentes ao domínio desta fatia, [guia do executor](../EXECUCAO.md) e o registro do ticket 30, onde o problema apareceu. As decisões do contrato prevalecem sobre sugestões antigas do plano; instruções novas do usuário prevalecem sobre ambos.
 
