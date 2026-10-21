@@ -6,6 +6,8 @@ function sessionId() {
     const id = crypto.randomUUID();
     sessionStorage.setItem('mapa.editor-session.v1', id);
     return id;
-  } catch { return crypto.randomUUID(); }
+  } catch {
+    return crypto.randomUUID();
+  }
 }
 export const editorSessionId = sessionId();

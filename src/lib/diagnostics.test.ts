@@ -15,5 +15,7 @@ test('failure capture excludes identifiers, query/hash, error content and keeps 
   expect(JSON.stringify(warn.mock.calls)).not.toMatch(/PRIVATE|secret|private-/);
   records[0].route = 'modified';
   expect(readDiagnostics()[0].route).toBe('/404');
-  disconnect(); warn.mockRestore(); window.history.replaceState({}, '', '/');
+  disconnect();
+  warn.mockRestore();
+  window.history.replaceState({}, '', '/');
 });

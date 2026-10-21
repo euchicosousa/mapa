@@ -3,6 +3,8 @@
 let running = 0;
 export function beginAuthAction() {
   running += 1;
-  return () => { running -= 1; };
+  return () => {
+    running -= 1;
+  };
 }
 export const authActionRunning = () => running > 0;

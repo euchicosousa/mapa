@@ -14,7 +14,8 @@ async function signIn(page: Page, email: string, password: string) {
 
 for (const account of accounts) {
   test(`${account.key} has real workspace access and safe logout`, async ({ page }, testInfo) => {
-    await page.goto('/equipe'); await expect(page).toHaveURL(/login\?next=/);
+    await page.goto('/equipe');
+    await expect(page).toHaveURL(/login\?next=/);
     await signIn(page, account.email, account.password);
     if (!account.workspace) {
       await expect(page).toHaveURL(/sem-acesso$/);
@@ -31,7 +32,8 @@ for (const account of accounts) {
     await page.screenshot({ path: testInfo.outputPath('authenticated.png'), fullPage: true });
     await page.getByRole('button', { name: 'Sair', exact: true }).click();
     await expect(page).toHaveURL(/login$/);
-    await page.goBack(); await expect(page).toHaveURL(/login/);
+    await page.goBack();
+    await expect(page).toHaveURL(/login/);
     await expect(page.getByText(`${account.name} (você)`, { exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem('mapa.auth.v1'))).toBeNull();
   });

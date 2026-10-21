@@ -12,7 +12,8 @@ export function parsePasswordLink(url: URL): PasswordLink | null {
   const hash = new URLSearchParams(url.hash.slice(1));
   const kind = hash.get('type');
   if (url.searchParams.has('error') || hash.has('error') || hash.has('error_code')) return null;
-  const access_token = hash.get('access_token'), refresh_token = hash.get('refresh_token');
+  const access_token = hash.get('access_token'),
+    refresh_token = hash.get('refresh_token');
   if ((kind !== 'recovery' && kind !== 'invite') || !access_token || !refresh_token) return null;
   return { kind, access_token, refresh_token };
 }
@@ -42,7 +43,11 @@ export function connectPasswordLinks(navigate: (path: string) => void) {
 
 export function clearPasswordGrant() {
   memoryGrant = null;
-  try { sessionStorage.removeItem(grantKey); } catch { /* In-memory flow still works. */ }
+  try {
+    sessionStorage.removeItem(grantKey);
+  } catch {
+    /* In-memory flow still works. */
+  }
 }
 
 async function consumeLink() {
@@ -50,24 +55,49 @@ async function consumeLink() {
   incomingLink = null;
   if (!link || !supabase) return false;
   clearPasswordGrant();
-  const finish = beginAuthAction(), ticket = lockPrivateData();
+  const finish = beginAuthAction(),
+    ticket = lockPrivateData();
   try {
-    const { data, error } = await supabase.auth.setSession({ access_token: link.access_token, refresh_token: link.refresh_token });
+    const { data, error } = await supabase.auth.setSession({
+      access_token: link.access_token,
+      refresh_token: link.refresh_token,
+    });
     if (error || !data.session) return false;
-    memoryGrant = { userId: data.session.user.id, expiresAt: Math.min((data.session.expires_at ?? 0) * 1000, Date.now() + 30 * 60_000) };
-    try { sessionStorage.setItem(grantKey, JSON.stringify(memoryGrant)); } catch { /* No token stored here. */ }
+    memoryGrant = {
+      userId: data.session.user.id,
+      expiresAt: Math.min((data.session.expires_at ?? 0) * 1000, Date.now() + 30 * 60_000),
+    };
+    try {
+      sessionStorage.setItem(grantKey, JSON.stringify(memoryGrant));
+    } catch {
+      /* No token stored here. */
+    }
     return true;
-  } catch { return false; }
-  finally { finish(); unlockPrivateData(ticket); }
+  } catch {
+    return false;
+  } finally {
+    finish();
+    unlockPrivateData(ticket);
+  }
 }
 
 export async function hasPasswordGrant() {
   if (!supabase) return false;
   let grant = memoryGrant;
-  try { grant ??= JSON.parse(sessionStorage.getItem(grantKey) ?? 'null') as Grant | null; } catch { return false; }
-  if (!grant || typeof grant.expiresAt !== 'number' || grant.expiresAt <= Date.now()) { clearPasswordGrant(); return false; }
+  try {
+    grant ??= JSON.parse(sessionStorage.getItem(grantKey) ?? 'null') as Grant | null;
+  } catch {
+    return false;
+  }
+  if (!grant || typeof grant.expiresAt !== 'number' || grant.expiresAt <= Date.now()) {
+    clearPasswordGrant();
+    return false;
+  }
   const { data, error } = await supabase.auth.getUser();
-  if (error || data.user?.id !== grant.userId) { clearPasswordGrant(); return false; }
+  if (error || data.user?.id !== grant.userId) {
+    clearPasswordGrant();
+    return false;
+  }
   return true;
 }
 
@@ -78,6 +108,13 @@ export async function passwordCallbackLoader() {
 }
 
 export async function passwordFormLoader() {
-  if (incomingLink) { consumption ??= consumeLink(); await consumption; }
-  try { return { valid: await hasPasswordGrant() }; } catch { return { valid: false }; }
+  if (incomingLink) {
+    consumption ??= consumeLink();
+    await consumption;
+  }
+  try {
+    return { valid: await hasPasswordGrant() };
+  } catch {
+    return { valid: false };
+  }
 }

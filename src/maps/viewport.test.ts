@@ -9,5 +9,7 @@ it('leaves a visible node alone and minimally reveals a new child without changi
 });
 
 it('centers an oversized node without altering the scale', () => {
-  expect(revealNodeViewport({ x: 0, y: 0, zoom: 1 }, { x: 0, y: 0, height: 800 }, { width: 390, height: 300 })).toEqual({ x: 64, y: -250, zoom: 1 });
+  expect(revealNodeViewport({ x: 0, y: 0, zoom: 1 }, { x: 0, y: 0, height: 800 }, { width: 390, height: 300 })).toEqual(
+    { x: 64, y: -250, zoom: 1 },
+  );
 });

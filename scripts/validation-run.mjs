@@ -22,8 +22,13 @@ const roles = [
 const validationFile = '.env.validation';
 function loadValidationFile() {
   let text;
-  try { text = readFileSync(validationFile, 'utf8'); } catch { return; }
-  if (statSync(validationFile).mode & 0o077) throw new Error(`${validationFile} precisa ser privado: rode chmod 600 ${validationFile}.`);
+  try {
+    text = readFileSync(validationFile, 'utf8');
+  } catch {
+    return;
+  }
+  if (statSync(validationFile).mode & 0o077)
+    throw new Error(`${validationFile} precisa ser privado: rode chmod 600 ${validationFile}.`);
   // Accepts one variable per line or a pasted `export A=… B='…'` line.
   for (const name of ['MAPA_PROJECT_REF', 'SUPABASE_SECRET_KEY']) {
     const match = text.match(new RegExp(`(?:^|\\s)${name}=('[^']*'|"[^"]*"|[^\\s;&]+)`));
@@ -38,11 +43,14 @@ export function readTarget() {
   const secretKey = process.env.SUPABASE_SECRET_KEY;
   const url = env.VITE_SUPABASE_URL;
   const publicKey = env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!ref || !secretKey) throw new Error(`Defina MAPA_PROJECT_REF e SUPABASE_SECRET_KEY no ambiente ou em ${validationFile} (chmod 600).`);
+  if (!ref || !secretKey)
+    throw new Error(`Defina MAPA_PROJECT_REF e SUPABASE_SECRET_KEY no ambiente ou em ${validationFile} (chmod 600).`);
   if (!url || !publicKey) throw new Error('Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY em .env.local.');
   // The frontend config and the administrative key must point at the same expected project.
-  if (new URL(url).hostname !== `${ref}.supabase.co`) throw new Error(`.env.local não aponta para o projeto esperado ${ref}.`);
-  if (secretKey.startsWith('sb_publishable_') || secretKey === publicKey) throw new Error('SUPABASE_SECRET_KEY precisa ser a chave secreta, não a publicável.');
+  if (new URL(url).hostname !== `${ref}.supabase.co`)
+    throw new Error(`.env.local não aponta para o projeto esperado ${ref}.`);
+  if (secretKey.startsWith('sb_publishable_') || secretKey === publicKey)
+    throw new Error('SUPABASE_SECRET_KEY precisa ser a chave secreta, não a publicável.');
   return { ref, url, publicKey, secretKey };
 }
 
@@ -63,7 +71,8 @@ export async function createRun(target) {
     await saveRecord(record);
     for (const label of ['X', 'Y']) {
       const workspace = { id: randomUUID(), name: `Validação ${runId} ${label}` };
-      record.workspaces.push(workspace.id); await saveRecord(record);
+      record.workspaces.push(workspace.id);
+      await saveRecord(record);
       const { error } = await admin.from('workspaces').insert(workspace);
       if (error) throw new Error('Não foi possível criar o espaço temporário.');
       run.workspaces[label] = workspace;
@@ -72,16 +81,30 @@ export async function createRun(target) {
       const email = `mapa-validacao-${runId}-${entry.key.toLowerCase()}@example.com`;
       const password = randomBytes(24).toString('base64url');
       const name = `Validação ${entry.key} ${runId}`;
-      const created = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { display_name: name } });
+      const created = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { display_name: name },
+      });
       if (created.error || !created.data.user) throw new Error('Não foi possível criar a conta temporária.');
-      record.users.push(created.data.user.id); await saveRecord(record);
+      record.users.push(created.data.user.id);
+      await saveRecord(record);
       if (entry.workspace) {
-        const { error } = await admin.from('workspace_members').insert({ workspace_id: run.workspaces[entry.workspace].id, user_id: created.data.user.id, role: entry.role, status: 'active' });
+        const { error } = await admin.from('workspace_members').insert({
+          workspace_id: run.workspaces[entry.workspace].id,
+          user_id: created.data.user.id,
+          role: entry.role,
+          status: 'active',
+        });
         if (error) throw new Error('Não foi possível criar o vínculo temporário.');
       }
-      if (process.env.MAPA_AI_VALIDATION==='1' && ['A','B'].includes(entry.key)) {
-        const access=await admin.rpc('set_ai_validation_access',{p_user_id:created.data.user.id,p_enabled:true});
-        if(access.error)throw Error('Não foi possível liberar IA para a identidade temporária.');
+      if (process.env.MAPA_AI_VALIDATION === '1' && ['A', 'B'].includes(entry.key)) {
+        const access = await admin.rpc('set_ai_validation_access', {
+          p_user_id: created.data.user.id,
+          p_enabled: true,
+        });
+        if (access.error) throw Error('Não foi possível liberar IA para a identidade temporária.');
       }
       run.accounts.push({ ...entry, id: created.data.user.id, email, password, name });
     }
@@ -130,7 +153,10 @@ export async function cleanupRun(target, runId) {
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error && error.status !== 404) failures.push(`conta ${id}`);
   }
-  if (failures.length) throw new Error(`Limpeza incompleta da execução ${runId}: ${failures.join(', ')}. Registro preservado em ${recordPath(runId)}.`);
+  if (failures.length)
+    throw new Error(
+      `Limpeza incompleta da execução ${runId}: ${failures.join(', ')}. Registro preservado em ${recordPath(runId)}.`,
+    );
   await rm(recordPath(runId));
   return record;
 }
@@ -138,31 +164,51 @@ export async function cleanupRun(target, runId) {
 export async function cleanupPending(target) {
   const files = await readdir(runsDir).catch(() => []);
   const cleaned = [];
-  for (const file of files.filter((name) => name.endsWith('.json'))) cleaned.push((await cleanupRun(target, file.slice(0, -5))).runId);
+  for (const file of files.filter((name) => name.endsWith('.json')))
+    cleaned.push((await cleanupRun(target, file.slice(0, -5))).runId);
   return cleaned;
 }
 
 // Browser tests may change only a recorded, temporary non-admin membership.
-async function setValidationMembership(target,runId,userId,status) {
-  if(!/^\d{8}-[a-f0-9]{6}$/.test(runId??'')||!['active','inactive'].includes(status))throw Error('Escopo de validação inválido.');
-  const record=JSON.parse(await readFile(recordPath(runId),'utf8'));
-  if(record.ref!==target.ref||!record.users.includes(userId)||!record.workspaces.length)throw Error('A conta não pertence à execução de validação.');
-  const result=await adminClient(target).from('workspace_members').update({status}).eq('user_id',userId).in('workspace_id',record.workspaces).eq('role','member').select('user_id');
-  if(result.error||result.data.length!==1)throw Error('Não foi possível alterar o vínculo temporário.');
+async function setValidationMembership(target, runId, userId, status) {
+  if (!/^\d{8}-[a-f0-9]{6}$/.test(runId ?? '') || !['active', 'inactive'].includes(status))
+    throw Error('Escopo de validação inválido.');
+  const record = JSON.parse(await readFile(recordPath(runId), 'utf8'));
+  if (record.ref !== target.ref || !record.users.includes(userId) || !record.workspaces.length)
+    throw Error('A conta não pertence à execução de validação.');
+  const result = await adminClient(target)
+    .from('workspace_members')
+    .update({ status })
+    .eq('user_id', userId)
+    .in('workspace_id', record.workspaces)
+    .eq('role', 'member')
+    .select('user_id');
+  if (result.error || result.data.length !== 1) throw Error('Não foi possível alterar o vínculo temporário.');
 }
 
 // CLI. `create` prints the run (with passwords) to stdout only, for a parent process pipe.
 const [command, runId] = process.argv.slice(2);
 if (import.meta.url === `file://${process.argv[1]}`) {
   const actions = {
-    'membership-status':async()=>setValidationMembership(readTarget(),runId,process.argv[4],process.argv[5]),
+    'membership-status': async () => setValidationMembership(readTarget(), runId, process.argv[4], process.argv[5]),
     create: async () => process.stdout.write(JSON.stringify(await createRun(readTarget()))),
     cleanup: async () => {
-      if (runId) { await cleanupRun(readTarget(), runId); return console.error(`Execução ${runId} limpa.`); }
+      if (runId) {
+        await cleanupRun(readTarget(), runId);
+        return console.error(`Execução ${runId} limpa.`);
+      }
       const runs = await cleanupPending(readTarget());
       console.log(runs.length ? `Execuções limpas: ${runs.join(', ')}` : 'Nenhuma execução pendente.');
     },
   };
-  if (!actions[command]) { console.error('Uso: validation-run.mjs create | cleanup [run_id] | membership-status run_id user_id active|inactive'); process.exitCode = 1; }
-  else actions[command]().catch((error) => { console.error(error.message); process.exitCode = 1; });
+  if (!actions[command]) {
+    console.error(
+      'Uso: validation-run.mjs create | cleanup [run_id] | membership-status run_id user_id active|inactive',
+    );
+    process.exitCode = 1;
+  } else
+    actions[command]().catch((error) => {
+      console.error(error.message);
+      process.exitCode = 1;
+    });
 }

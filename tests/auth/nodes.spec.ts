@@ -16,16 +16,18 @@ async function signOut(page: Page) {
   await expect(page).toHaveURL(/login$/);
 }
 const saveState = (page: Page) => page.locator('.save-state [role="status"]');
-const node = (page: Page, text: string) => page.locator('.react-flow__node').filter({ has: page.getByText(text, { exact: true }) });
+const node = (page: Page, text: string) =>
+  page.locator('.react-flow__node').filter({ has: page.getByText(text, { exact: true }) });
 const noOverflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
-test('B builds child and grandchild, A edits B\'s node and authorship is preserved', async ({ page }, testInfo) => {
+test("B builds child and grandchild, A edits B's node and authorship is preserved", async ({ page }, testInfo) => {
   test.setTimeout(60_000);
   const mobile = testInfo.project.name === 'mobile';
   // Touch only on mobile: no hover, double click or physical keyboard shortcut.
-  const press = (target: Locator) => mobile ? target.tap() : target.click();
+  const press = (target: Locator) => (mobile ? target.tap() : target.click());
 
-  await page.goto('/mapas'); await signIn(page, b);
+  await page.goto('/mapas');
+  await signIn(page, b);
   await expect(page.getByRole('heading', { name: 'Seus mapas', level: 1 })).toBeVisible();
   await page.getByRole('button', { name: 'Novo mapa', exact: true }).click();
   await expect(page).toHaveURL(/\/mapas\/[0-9a-f-]{36}$/);
@@ -79,7 +81,8 @@ test('B builds child and grandchild, A edits B\'s node and authorship is preserv
   await expect(node(page, 'Neto de B')).toBeVisible();
   await signOut(page);
 
-  await page.goto(mapPath); await signIn(page, a);
+  await page.goto(mapPath);
+  await signIn(page, a);
   await expect(page).toHaveURL(new RegExp(`${mapPath}$`));
   await press(node(page, 'Filho de B'));
   await expect(page.getByText(`Criado por ${b.name} · Última edição por ${b.name}`)).toBeVisible();
@@ -118,7 +121,10 @@ test('B builds child and grandchild, A edits B\'s node and authorship is preserv
   const operations: string[] = [];
   await page.route('**/rest/v1/rpc/apply_map_command', async (route) => {
     operations.push(route.request().postDataJSON().p_operation_id);
-    if (lost++ === 0) { await route.fetch(); await route.abort('timedout'); } else await route.continue();
+    if (lost++ === 0) {
+      await route.fetch();
+      await route.abort('timedout');
+    } else await route.continue();
   });
   await press(node(page, 'Segunda'));
   await press(page.getByRole('button', { name: 'Adicionar filho' }));
@@ -136,9 +142,7 @@ test('B builds child and grandchild, A edits B\'s node and authorship is preserv
   await signOut(page);
 });
 
-
 test.afterEach(async ({ page }, info) => {
   if (info.status === info.expectedStatus) return;
   await page.screenshot({ path: info.outputPath('failure.png'), fullPage: true });
-
 });

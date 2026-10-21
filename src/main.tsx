@@ -10,4 +10,10 @@ import { connectDiagnostics } from './lib/diagnostics';
 const disconnectDiagnostics = connectDiagnostics();
 if (import.meta.hot) import.meta.hot.dispose(disconnectDiagnostics);
 
-createRoot(document.getElementById('root')!).render(<StrictMode><QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider></StrictMode>);
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  </StrictMode>,
+);

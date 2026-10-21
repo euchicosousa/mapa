@@ -8,6 +8,14 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   { files: ['**/*.mjs'], languageOptions: { globals: { process: 'readonly', console: 'readonly', URL: 'readonly' } } },
-  { files: ['**/*.{ts,tsx}'], languageOptions: { globals: { window: 'readonly', document: 'readonly', atob: 'readonly', process: 'readonly' } }, plugins: { 'react-hooks': hooks, 'react-refresh': refresh }, rules: { ...hooks.configs.recommended.rules, 'react-refresh/only-export-components': ['warn', { allowConstantExport: true }] } },
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: { globals: { window: 'readonly', document: 'readonly', atob: 'readonly', process: 'readonly' } },
+    plugins: { 'react-hooks': hooks, 'react-refresh': refresh },
+    rules: {
+      ...hooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
   prettier,
 );

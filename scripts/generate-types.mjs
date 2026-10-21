@@ -10,9 +10,15 @@ if (!ref || !url || new URL(url).hostname !== `${ref}.supabase.co`) {
   console.error('Defina MAPA_PROJECT_REF igual ao projeto de .env.local. O contrato atual foi preservado.');
   process.exit(1);
 }
-const result = spawnSync('npx', ['--no-install', 'supabase', 'gen', 'types', 'typescript', '--project-id', ref, '--schema', 'public'], { encoding: 'utf8' });
+const result = spawnSync(
+  'npx',
+  ['--no-install', 'supabase', 'gen', 'types', 'typescript', '--project-id', ref, '--schema', 'public'],
+  { encoding: 'utf8' },
+);
 if (result.status !== 0 || !result.stdout.includes('export type Database')) {
-  console.error('Tipos não gerados. Verifique `npx supabase login` e o acesso ao projeto. O contrato atual foi preservado.');
+  console.error(
+    'Tipos não gerados. Verifique `npx supabase login` e o acesso ao projeto. O contrato atual foi preservado.',
+  );
   process.exitCode = 1;
 } else {
   // Replace only after a complete write.

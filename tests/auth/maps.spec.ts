@@ -22,9 +22,13 @@ test('B creates a map in X, A reopens it and C cannot see it', async ({ page }, 
   // While the library is open (load and idle, before any click), it never requests nodes or documents.
   const libraryRequests: string[] = [];
   let watchingLibrary = false;
-  page.on('request', (request) => { if (watchingLibrary && /\/rest\/v1\/(nodes|rpc\/get_map_document)/.test(request.url())) libraryRequests.push(request.url()); });
+  page.on('request', (request) => {
+    if (watchingLibrary && /\/rest\/v1\/(nodes|rpc\/get_map_document)/.test(request.url()))
+      libraryRequests.push(request.url());
+  });
 
-  await page.goto('/mapas'); await expect(page).toHaveURL(/login\?next=/);
+  await page.goto('/mapas');
+  await expect(page).toHaveURL(/login\?next=/);
   watchingLibrary = true;
   await signIn(page, b);
   await expect(page).toHaveURL(/\/mapas$/);
@@ -44,7 +48,9 @@ test('B creates a map in X, A reopens it and C cannot see it', async ({ page }, 
   }
   await signOut(page);
 
-  await page.goto('/mapas'); watchingLibrary = true; await signIn(page, a);
+  await page.goto('/mapas');
+  watchingLibrary = true;
+  await signIn(page, a);
   const item = page.locator(`a[href="${mapPath}"]:visible`);
   await expect(item).toContainText('Novo mapa');
   await expect(page.locator(`[data-map-id="${mapPath.split('/').at(-1)}"]:visible`)).toContainText(b.name);
@@ -56,7 +62,8 @@ test('B creates a map in X, A reopens it and C cannot see it', async ({ page }, 
   await expect(rootNode(page)).toBeVisible();
   await signOut(page);
 
-  await page.goto('/mapas'); await signIn(page, c);
+  await page.goto('/mapas');
+  await signIn(page, c);
   await expect(page.getByRole('heading', { name: 'Nenhum mapa ainda' })).toBeVisible();
   await page.goto(mapPath);
   await expect(page.getByRole('heading', { name: 'Mapa indisponível', level: 1 })).toBeVisible();

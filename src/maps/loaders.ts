@@ -39,27 +39,45 @@ export async function mapLoader(args: LoaderFunctionArgs) {
   if (!id.success) return { kind: 'unavailable' as const };
   try {
     const document = await queryClient.fetchQuery({
-      queryKey: ['map', access.userId, id.data], staleTime: 0, retry: false,
+      queryKey: ['map', access.userId, id.data],
+      staleTime: 0,
+      retry: false,
       queryFn: ({ signal }) => getMapDocument(id.data, signal),
     });
     let recovery: Recovery;
     try {
       const local = await readDraft({ userId: access.userId, workspaceId: access.workspace.id, mapId: id.data });
       recovery = { record: local.record, epoch: local.epoch, mapEpoch: local.mapEpoch };
-    } catch { recovery = { record: null, epoch: 0, error: true }; }
+    } catch {
+      recovery = { record: null, epoch: 0, error: true };
+    }
     return { kind: 'ready' as const, access, document, recovery };
   } catch (error) {
-    if(error instanceof MapError && error.deleted){
-      const state=useEditorStore.getState();
-      if(state.activeMapId===id.data&&state.userId===access.userId)state.markDeleted();
-      queryClient.removeQueries({queryKey:['map',access.userId,id.data]});
+    if (error instanceof MapError && error.deleted) {
+      const state = useEditorStore.getState();
+      if (state.activeMapId === id.data && state.userId === access.userId) state.markDeleted();
+      queryClient.removeQueries({ queryKey: ['map', access.userId, id.data] });
       try {
-        const local=await readDraft({userId:access.userId,workspaceId:access.workspace.id,mapId:id.data});
-        return {kind:'deleted' as const,access,record:local.record??(state.activeMapId===id.data&&state.userId===access.userId?state.snapshot():null),storageError:false};
-      } catch{return {kind:'deleted' as const,access,record:state.activeMapId===id.data&&state.userId===access.userId?state.snapshot():null,storageError:true};}
+        const local = await readDraft({ userId: access.userId, workspaceId: access.workspace.id, mapId: id.data });
+        return {
+          kind: 'deleted' as const,
+          access,
+          record:
+            local.record ?? (state.activeMapId === id.data && state.userId === access.userId ? state.snapshot() : null),
+          storageError: false,
+        };
+      } catch {
+        return {
+          kind: 'deleted' as const,
+          access,
+          record: state.activeMapId === id.data && state.userId === access.userId ? state.snapshot() : null,
+          storageError: true,
+        };
+      }
     }
     if (error instanceof MapError && (error.code === 'NOT_FOUND' || error.code === 'FORBIDDEN')) {
-      if (useEditorStore.getState().activeMapId === id.data && useEditorStore.getState().userId === access.userId) useEditorStore.getState().revoke();
+      if (useEditorStore.getState().activeMapId === id.data && useEditorStore.getState().userId === access.userId)
+        useEditorStore.getState().revoke();
       await useEditorStore.getState().flushLocal();
       await clearMapDrafts({ userId: access.userId, workspaceId: access.workspace.id, mapId: id.data }).catch(() => {});
       queryClient.removeQueries({ queryKey: ['map', access.userId, id.data] });

@@ -4,26 +4,81 @@ import { editorSessionId } from './editor-session';
 
 const index = z.number().int().min(0).max(499);
 const payload = z.discriminatedUnion('kind', [
-  z.object({kind:z.literal('delete_map'),payload:z.object({}).strict()}),
+  z.object({ kind: z.literal('delete_map'), payload: z.object({}).strict() }),
   z.object({ kind: z.literal('transfer_owner'), payload: z.object({ ownerId: z.uuid() }) }),
   z.object({ kind: z.literal('rename_map'), payload: z.object({ title: z.string() }) }),
   z.object({ kind: z.literal('set_project'), payload: z.object({ projectId: z.uuid().nullable() }) }),
-  z.object({ kind: z.literal('move_subtree'), payload: z.object({ nodeId: z.uuid(), newParentId: z.uuid(), targetIndex: index }) }),
+  z.object({
+    kind: z.literal('move_subtree'),
+    payload: z.object({ nodeId: z.uuid(), newParentId: z.uuid(), targetIndex: index }),
+  }),
   z.object({ kind: z.literal('reorder_siblings'), payload: z.object({ nodeId: z.uuid(), targetIndex: index }) }),
-  z.object({ kind: z.literal('add_child'), payload: z.object({ nodeId: z.uuid(), parentId: z.uuid(), text: z.string() }) }),
+  z.object({
+    kind: z.literal('add_child'),
+    payload: z.object({ nodeId: z.uuid(), parentId: z.uuid(), text: z.string() }),
+  }),
   z.object({ kind: z.literal('edit_text'), payload: z.object({ nodeId: z.uuid(), text: z.string() }) }),
   z.object({ kind: z.literal('delete_subtree'), payload: z.object({ nodeId: z.uuid() }) }),
 ]);
-const operation = payload.and(z.object({ operationId: z.uuid(), sent: z.boolean(), expectedRevision: z.number().int().positive().optional(), editorSessionId: z.uuid().optional() }))
+const operation = payload
+  .and(
+    z.object({
+      operationId: z.uuid(),
+      sent: z.boolean(),
+      expectedRevision: z.number().int().positive().optional(),
+      editorSessionId: z.uuid().optional(),
+    }),
+  )
   .refine((entry) => !entry.sent || (entry.expectedRevision !== undefined && entry.editorSessionId !== undefined));
-const copy = z.object({ sourceMapId: z.uuid(), operationId: z.uuid(), editorSessionId: z.uuid(), title: z.string().min(1).max(120), nodes: z.array(z.object({ id: z.uuid(), parentId: z.uuid().nullable(), text: z.string(), sortOrder: z.number().int().nonnegative() })).max(500) });
-const history = z.object({ mapId: z.uuid(), operationId: z.uuid(), editorSessionId: z.uuid(), expectedRevision: z.number().int().positive(), targetOperationId: z.uuid(), mode: z.enum(['undo','redo']) });
-export const draftSchema = z.object({
-  version: z.literal(1), userId: z.uuid(), workspaceId: z.uuid(), mapId: z.uuid(), sessionId: z.uuid(), epoch: z.number().int().nonnegative(), mapEpoch: z.number().int().nonnegative().default(0),
-  base: mapDocument, queue: z.array(operation), draft: z.object({ nodeId: z.uuid(), text: z.string() }).nullable(), selectedNodeId: z.uuid().nullable(),
-  conflict: z.boolean(), needsHeadCheck: z.boolean(), copyRequest: copy.nullable(), updatedAt: z.string(),
-  pendingHistory: history.nullable().optional(), undoRequested: z.uuid().nullable().optional(),
-}).refine((record) => !record.pendingHistory || (record.pendingHistory.mapId === record.mapId && record.pendingHistory.editorSessionId === record.sessionId));
+const copy = z.object({
+  sourceMapId: z.uuid(),
+  operationId: z.uuid(),
+  editorSessionId: z.uuid(),
+  title: z.string().min(1).max(120),
+  nodes: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        parentId: z.uuid().nullable(),
+        text: z.string(),
+        sortOrder: z.number().int().nonnegative(),
+      }),
+    )
+    .max(500),
+});
+const history = z.object({
+  mapId: z.uuid(),
+  operationId: z.uuid(),
+  editorSessionId: z.uuid(),
+  expectedRevision: z.number().int().positive(),
+  targetOperationId: z.uuid(),
+  mode: z.enum(['undo', 'redo']),
+});
+export const draftSchema = z
+  .object({
+    version: z.literal(1),
+    userId: z.uuid(),
+    workspaceId: z.uuid(),
+    mapId: z.uuid(),
+    sessionId: z.uuid(),
+    epoch: z.number().int().nonnegative(),
+    mapEpoch: z.number().int().nonnegative().default(0),
+    base: mapDocument,
+    queue: z.array(operation),
+    draft: z.object({ nodeId: z.uuid(), text: z.string() }).nullable(),
+    selectedNodeId: z.uuid().nullable(),
+    conflict: z.boolean(),
+    needsHeadCheck: z.boolean(),
+    copyRequest: copy.nullable(),
+    updatedAt: z.string(),
+    pendingHistory: history.nullable().optional(),
+    undoRequested: z.uuid().nullable().optional(),
+  })
+  .refine(
+    (record) =>
+      !record.pendingHistory ||
+      (record.pendingHistory.mapId === record.mapId && record.pendingHistory.editorSessionId === record.sessionId),
+  );
 export type DraftRecord = z.infer<typeof draftSchema>;
 export type DraftScope = Pick<DraftRecord, 'userId' | 'workspaceId' | 'mapId'>;
 const scopeKey = (scope: DraftScope) => [scope.userId, scope.workspaceId, scope.mapId];
@@ -64,9 +119,19 @@ export async function readDraft(scope: DraftScope) {
     const raw: unknown = recordRequest.result;
     if (raw === undefined) return { epoch, mapEpoch, record: null };
     const record = draftSchema.parse(raw);
-    if (record.userId !== scope.userId || record.workspaceId !== scope.workspaceId || record.mapId !== scope.mapId || record.sessionId !== editorSessionId || record.epoch !== epoch || record.mapEpoch !== mapEpoch) return { epoch, mapEpoch, record: null };
+    if (
+      record.userId !== scope.userId ||
+      record.workspaceId !== scope.workspaceId ||
+      record.mapId !== scope.mapId ||
+      record.sessionId !== editorSessionId ||
+      record.epoch !== epoch ||
+      record.mapEpoch !== mapEpoch
+    )
+      return { epoch, mapEpoch, record: null };
     return { epoch, mapEpoch, record };
-  } finally { db.close(); }
+  } finally {
+    db.close();
+  }
 }
 // Epoch and record share the transaction: a late tab cannot recreate erased data
 // after explicit logout/revocation, even when its write was already queued.
@@ -79,13 +144,19 @@ export async function writeDraft(record: DraftRecord, pending: boolean) {
     const epoch = tx.objectStore('epochs').get(record.userId);
     const mapEpoch = tx.objectStore('epochs').get(scopeKey(record));
     mapEpoch.onsuccess = () => {
-      if (Number(epoch.result ?? 0) !== record.epoch || Number(mapEpoch.result ?? 0) !== record.mapEpoch) { stale = true; return; }
+      if (Number(epoch.result ?? 0) !== record.epoch || Number(mapEpoch.result ?? 0) !== record.mapEpoch) {
+        stale = true;
+        return;
+      }
       const store = tx.objectStore('drafts');
-      if (pending) store.put(record, key(record)); else store.delete(key(record));
+      if (pending) store.put(record, key(record));
+      else store.delete(key(record));
     };
     await done;
     if (stale) throw new Error('STORAGE_REVOKED');
-  } finally { db.close(); }
+  } finally {
+    db.close();
+  }
 }
 export async function clearMapDrafts(scope: DraftScope) {
   const db = await openDatabase();
@@ -103,7 +174,9 @@ export async function clearMapDrafts(scope: DraftScope) {
       entry.continue();
     };
     await done;
-  } finally { db.close(); }
+  } finally {
+    db.close();
+  }
 }
 export async function clearAccountDrafts(userId: string) {
   const db = await openDatabase();
@@ -120,13 +193,31 @@ export async function clearAccountDrafts(userId: string) {
       entry.continue();
     };
     await done;
-  } finally { db.close(); }
+  } finally {
+    db.close();
+  }
 }
 
 export function downloadEmergencyDraft(record: DraftRecord) {
-  const blob = new Blob([JSON.stringify({ format: 'mapa-emergency-draft', version: 1, warning: 'Rascunho técnico de emergência; não é o backup portátil do Mapa.', record }, null, 2)], { type: 'application/json' });
+  const blob = new Blob(
+    [
+      JSON.stringify(
+        {
+          format: 'mapa-emergency-draft',
+          version: 1,
+          warning: 'Rascunho técnico de emergência; não é o backup portátil do Mapa.',
+          record,
+        },
+        null,
+        2,
+      ),
+    ],
+    { type: 'application/json' },
+  );
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = url; link.download = `mapa-rascunho-${record.mapId}.json`;
-  link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  link.href = url;
+  link.download = `mapa-rascunho-${record.mapId}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

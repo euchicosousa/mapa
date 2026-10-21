@@ -2,7 +2,10 @@ import { afterEach, expect, it } from 'vitest';
 import { queryClient } from '../app/query-client';
 import { privacySnapshot, lockPrivateData, unlockPrivateData } from './privacy';
 import { useEditorStore } from '../state/editor';
-afterEach(() => { queryClient.clear(); useEditorStore.getState().reset(); });
+afterEach(() => {
+  queryClient.clear();
+  useEditorStore.getState().reset();
+});
 it('removes remote cache and editor identity before exposing another session', () => {
   queryClient.setQueryData(['team', 'previous-user'], [{ name: 'Private colleague' }]);
   useEditorStore.setState({ activeMapId: 'old-map', selectedNodeId: 'old-node' });
@@ -11,12 +14,16 @@ it('removes remote cache and editor identity before exposing another session', (
   expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
   expect(useEditorStore.getState().activeMapId).toBeNull();
   expect(useEditorStore.getState().selectedNodeId).toBeNull();
-  unlockPrivateData(ticket); expect(privacySnapshot()).toBe(false);
+  unlockPrivateData(ticket);
+  expect(privacySnapshot()).toBe(false);
 });
 it('an obsolete request cannot unlock a newer session transition', () => {
-  const first = lockPrivateData(); const second = lockPrivateData();
-  unlockPrivateData(first); expect(privacySnapshot()).toBe(true);
-  unlockPrivateData(second); expect(privacySnapshot()).toBe(false);
+  const first = lockPrivateData();
+  const second = lockPrivateData();
+  unlockPrivateData(first);
+  expect(privacySnapshot()).toBe(true);
+  unlockPrivateData(second);
+  expect(privacySnapshot()).toBe(false);
 });
 it('only a different account or sign-out counts as an identity change', async () => {
   const { identityChanged } = await import('./events');

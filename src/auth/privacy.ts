@@ -4,7 +4,12 @@ let locked = false;
 let generation = 0;
 const listeners = new Set<() => void>();
 export const privacySnapshot = () => locked;
-export function subscribePrivacy(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }
+export function subscribePrivacy(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 export function lockPrivateData() {
   generation += 1;
   locked = true;

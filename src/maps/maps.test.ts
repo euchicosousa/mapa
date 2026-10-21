@@ -25,14 +25,19 @@ it('places the root at the origin and children to its right in sort order', () =
 it('separates 50 variable-height nodes, including cousins and internal nodes', () => {
   const base = { createdBy: 'u', updatedBy: 'u', source: 'manual' as const };
   const nodes = Array.from({ length: 50 }, (_, index) => ({
-    ...base, id: String(index), parentId: index === 0 ? null : String(Math.floor((index - 1) / 4)), text: 'Longo '.repeat(index + 1), sortOrder: index,
+    ...base,
+    id: String(index),
+    parentId: index === 0 ? null : String(Math.floor((index - 1) / 4)),
+    text: 'Longo '.repeat(index + 1),
+    sortOrder: index,
   }));
-  const heights = Object.fromEntries(nodes.map((node, index) => [node.id, 50 + index % 7 * 57]));
+  const heights = Object.fromEntries(nodes.map((node, index) => [node.id, 50 + (index % 7) * 57]));
   for (const measured of [heights, { ...heights, '3': 900, '12': 700 }]) {
     const placed = layoutMap(nodes, measured);
-    for (const a of placed) for (const b of placed) {
-      if (a.node.id >= b.node.id || a.x !== b.x) continue;
-      expect(a.y + measured[a.node.id] + 31.99 <= b.y || b.y + measured[b.node.id] + 31.99 <= a.y).toBe(true);
-    }
+    for (const a of placed)
+      for (const b of placed) {
+        if (a.node.id >= b.node.id || a.x !== b.x) continue;
+        expect(a.y + measured[a.node.id] + 31.99 <= b.y || b.y + measured[b.node.id] + 31.99 <= a.y).toBe(true);
+      }
   }
 });

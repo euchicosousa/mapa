@@ -16,7 +16,10 @@ export async function readAccess(): Promise<Access> {
   if (!client) return { kind: 'unconfigured' };
   try {
     const access = await queryClient.fetchQuery<Access>({
-      queryKey: ['access'], staleTime: 0, gcTime: 0, retry: false,
+      queryKey: ['access'],
+      staleTime: 0,
+      gcTime: 0,
+      retry: false,
       queryFn: async ({ signal }) => {
         const { data: sessionData, error: sessionError } = await client.auth.getSession();
         if (sessionError) throw new Error('Session unavailable');
@@ -29,7 +32,13 @@ export async function readAccess(): Promise<Access> {
         }
         if (!data.user || signal.aborted) throw new Error('Identity changed');
         const userId = data.user.id;
-        const membership = await client.from('workspace_members').select('workspace_id,role').eq('user_id', userId).eq('status', 'active').limit(2).abortSignal(signal);
+        const membership = await client
+          .from('workspace_members')
+          .select('workspace_id,role')
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .limit(2)
+          .abortSignal(signal);
         if (membership.error) throw new Error('Membership unavailable');
         if (membership.data.length === 0) return { kind: 'no-access', userId };
         // This installation has one workspace in the UI. Never choose silently.
@@ -38,7 +47,12 @@ export async function readAccess(): Promise<Access> {
         // The column is a checked text, so generated types widen it to string.
         const role = member.role;
         if (role !== 'admin' && role !== 'member') throw new Error('Unknown role');
-        const workspace = await client.from('workspaces').select('id,name').eq('id', member.workspace_id).abortSignal(signal).single();
+        const workspace = await client
+          .from('workspaces')
+          .select('id,name')
+          .eq('id', member.workspace_id)
+          .abortSignal(signal)
+          .single();
         if (workspace.error) throw new Error('Workspace unavailable');
         return { kind: 'member', userId, workspace: workspace.data, role };
       },
@@ -50,7 +64,9 @@ export async function readAccess(): Promise<Access> {
       queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'access' });
     }
     return access;
-  } catch { return { kind: 'unavailable' }; }
+  } catch {
+    return { kind: 'unavailable' };
+  }
 }
 
 export async function requireMember({ request }: LoaderFunctionArgs): Promise<MemberAccess> {

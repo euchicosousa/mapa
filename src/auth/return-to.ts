@@ -6,5 +6,7 @@ export function safeReturnTo(value: unknown): string {
   try {
     const url = new URL(value, 'https://mapa.invalid');
     return url.origin === 'https://mapa.invalid' ? url.pathname + url.search : '/mapas';
-  } catch { return '/mapas'; }
+  } catch {
+    return '/mapas';
+  }
 }

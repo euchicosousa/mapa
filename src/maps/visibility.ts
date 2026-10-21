@@ -8,7 +8,8 @@ export function cleanCollapsed(nodes: MapNode[], ids: string[]): string[] {
 export function visibleNodes(nodes: MapNode[], collapsedIds: string[]): MapNode[] {
   const collapsed = new Set(collapsedIds);
   const children = new Map<string, string[]>();
-  for (const node of nodes) if (node.parentId) children.set(node.parentId, [...(children.get(node.parentId) ?? []), node.id]);
+  for (const node of nodes)
+    if (node.parentId) children.set(node.parentId, [...(children.get(node.parentId) ?? []), node.id]);
   const visible = new Set<string>();
   const visit = (id: string) => {
     if (visible.has(id)) return;
@@ -21,9 +22,9 @@ export function visibleNodes(nodes: MapNode[], collapsedIds: string[]): MapNode[
 export const hiddenCount = (nodes: MapNode[], id: string) => subtreeIds(nodes, id).size - 1;
 export function visibleAncestor(nodes: MapNode[], visible: MapNode[], selectedId: string): string | null {
   const shown = new Set(visible.map((node) => node.id));
-  const byId = new Map(nodes.map((node) => [node.id,node]));
+  const byId = new Map(nodes.map((node) => [node.id, node]));
   let id: string | null = selectedId;
-  for (let depth=0; id && depth<=30; depth++) {
+  for (let depth = 0; id && depth <= 30; depth++) {
     if (shown.has(id)) return id;
     id = byId.get(id)?.parentId ?? null;
   }

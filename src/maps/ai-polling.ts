@@ -10,27 +10,54 @@ export function watchGeneration(options: {
   visibility?: Pick<Document, 'hidden' | 'addEventListener' | 'removeEventListener'>;
 }) {
   const visibility = options.visibility ?? document;
-  let disposed = false, reading = false, refreshRequested = false;
+  let disposed = false,
+    reading = false,
+    refreshRequested = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const refresh = () => {
     clearTimeout(timer);
     if (disposed || visibility.hidden) return;
-    if (reading) { refreshRequested = true; return; }
+    if (reading) {
+      refreshRequested = true;
+      return;
+    }
     reading = true;
-    let keepReading = false, retryAllowed = true;
-    void options.read().then(job => {
-      if (!disposed && job) keepReading = options.receive(job);
-    }).catch(error => { if (!disposed) { keepReading = options.failure?.(error) ?? true; retryAllowed = keepReading; } }).finally(() => {
-      reading = false;
-      if (disposed || !retryAllowed) return;
-      if (refreshRequested) { refreshRequested = false; refresh(); }
-      else if (!visibility.hidden && (keepReading || options.pending())) timer = setTimeout(refresh, 1000);
-    });
+    let keepReading = false,
+      retryAllowed = true;
+    void options
+      .read()
+      .then((job) => {
+        if (!disposed && job) keepReading = options.receive(job);
+      })
+      .catch((error) => {
+        if (!disposed) {
+          keepReading = options.failure?.(error) ?? true;
+          retryAllowed = keepReading;
+        }
+      })
+      .finally(() => {
+        reading = false;
+        if (disposed || !retryAllowed) return;
+        if (refreshRequested) {
+          refreshRequested = false;
+          refresh();
+        } else if (!visibility.hidden && (keepReading || options.pending())) timer = setTimeout(refresh, 1000);
+      });
   };
-  const changed = () => { clearTimeout(timer); if (!visibility.hidden) refresh(); };
+  const changed = () => {
+    clearTimeout(timer);
+    if (!visibility.hidden) refresh();
+  };
   visibility.addEventListener('visibilitychange', changed);
   refresh();
-  return { refresh, dispose: () => { disposed = true; clearTimeout(timer); visibility.removeEventListener('visibilitychange', changed); } };
+  return {
+    refresh,
+    dispose: () => {
+      disposed = true;
+      clearTimeout(timer);
+      visibility.removeEventListener('visibilitychange', changed);
+    },
+  };
 }
 
 export function acceptGeneration(previous: AIGeneration | null, incoming: AIGeneration) {

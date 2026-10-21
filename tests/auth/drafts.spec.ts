@@ -31,33 +31,60 @@ async function records(page: Page, userId = b.id) {
   return page.evaluate(async (userId) => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('mapa.drafts.v1', 1);
-      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
     });
     try {
-      return await new Promise<{ userId: string; queue: unknown[]; draft: { text: string } | null }[]>((resolve, reject) => {
-        const request = db.transaction('drafts').objectStore('drafts').getAll();
-        request.onsuccess = () => resolve(request.result.filter((entry: { userId: string }) => entry.userId === userId));
-        request.onerror = () => reject(request.error);
-      });
-    } finally { db.close(); }
+      return await new Promise<{ userId: string; queue: unknown[]; draft: { text: string } | null }[]>(
+        (resolve, reject) => {
+          const request = db.transaction('drafts').objectStore('drafts').getAll();
+          request.onsuccess = () =>
+            resolve(request.result.filter((entry: { userId: string }) => entry.userId === userId));
+          request.onerror = () => reject(request.error);
+        },
+      );
+    } finally {
+      db.close();
+    }
   }, userId);
 }
-async function externalEdit(page: Page, request: Awaited<ReturnType<typeof openMap>>['request'], mapPath: string, text: string) {
+async function externalEdit(
+  page: Page,
+  request: Awaited<ReturnType<typeof openMap>>['request'],
+  mapPath: string,
+  text: string,
+) {
   const headers = await request.allHeaders();
   const url = request.url().replace('get_map_document', 'apply_map_command');
-  const response = await page.request.post(request.url(), { headers: { authorization: headers.authorization, apikey: headers.apikey }, data: { p_map_id: mapPath.split('/').at(-1) } });
+  const response = await page.request.post(request.url(), {
+    headers: { authorization: headers.authorization, apikey: headers.apikey },
+    data: { p_map_id: mapPath.split('/').at(-1) },
+  });
   const doc = await response.json();
-  const write = await page.request.post(url, { headers: { authorization: headers.authorization, apikey: headers.apikey }, data: {
-    p_map_id: doc.map.id, p_operation_id: crypto.randomUUID(), p_editor_session_id: crypto.randomUUID(), p_expected_revision: doc.map.revision,
-    p_kind: 'edit_text', p_payload: { nodeId: doc.nodes.find((node: { parentId: string | null }) => node.parentId === null).id, text },
-  } });
+  const write = await page.request.post(url, {
+    headers: { authorization: headers.authorization, apikey: headers.apikey },
+    data: {
+      p_map_id: doc.map.id,
+      p_operation_id: crypto.randomUUID(),
+      p_editor_session_id: crypto.randomUUID(),
+      p_expected_revision: doc.map.revision,
+      p_kind: 'edit_text',
+      p_payload: { nodeId: doc.nodes.find((node: { parentId: string | null }) => node.parentId === null).id, text },
+    },
+  });
   expect(write.status()).toBe(200);
 }
-async function noOverflow(page: Page) { expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); }
+async function noOverflow(page: Page) {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+}
 
-test.beforeEach(() => { test.setTimeout(90_000); });
+test.beforeEach(() => {
+  test.setTimeout(90_000);
+});
 
-test('failed writes, invalid draft and backend-offline reload preserve work for the same verified account', async ({ page }, info) => {
+test('failed writes, invalid draft and backend-offline reload preserve work for the same verified account', async ({
+  page,
+}, info) => {
   await openMap(page);
   await page.route('**/rest/v1/rpc/apply_map_command', (route) => route.abort('internetdisconnected'));
   await edit(page, 'Texto sem rede');
@@ -88,20 +115,34 @@ test('failed writes, invalid draft and backend-offline reload preserve work for 
   await expect.poll(async () => (await records(page)).length).toBe(0);
 });
 
-test('two revision-1 sessions conflict; a lost copy response and reload retry preserve both versions', async ({ page, browser }, info) => {
+test('two revision-1 sessions conflict; a lost copy response and reload retry preserve both versions', async ({
+  page,
+  browser,
+}, info) => {
   const { path } = await openMap(page);
-  const other: BrowserContext = await browser.newContext({ baseURL: 'http://127.0.0.1:4174', viewport: info.project.use.viewport, isMobile: info.project.name === 'mobile', hasTouch: info.project.name === 'mobile' });
+  const other: BrowserContext = await browser.newContext({
+    baseURL: 'http://127.0.0.1:4174',
+    viewport: info.project.use.viewport,
+    isMobile: info.project.name === 'mobile',
+    hasTouch: info.project.name === 'mobile',
+  });
   try {
     const second = await other.newPage();
     second.on('dialog', (dialog) => void dialog.accept());
     await signIn(second, a, path);
     let release!: () => void;
-    const held = new Promise<void>((resolve) => { release = resolve; });
-    await second.route('**/rest/v1/rpc/apply_map_command', async (route) => { await held; await route.continue(); });
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await second.route('**/rest/v1/rpc/apply_map_command', async (route) => {
+      await held;
+      await route.continue();
+    });
     const pending = second.waitForRequest('**/rest/v1/rpc/apply_map_command');
     await edit(second, 'Versão local de A');
     expect((await pending).postDataJSON().p_expected_revision).toBe(1);
-    await edit(page, 'Versão salva por B'); await expect(state(page)).toHaveText(/Salvo/);
+    await edit(page, 'Versão salva por B');
+    await expect(state(page)).toHaveText(/Salvo/);
     release();
     await expect(state(second)).toHaveText(/Conflito/);
     await second.screenshot({ path: info.outputPath('conflict-two-sessions.png'), fullPage: true });
@@ -109,7 +150,10 @@ test('two revision-1 sessions conflict; a lost copy response and reload retry pr
     const copies: { p_operation_id: string }[] = [];
     await second.route('**/rest/v1/rpc/create_map_copy', async (route) => {
       copies.push(route.request().postDataJSON());
-      if (copies.length === 1) { await route.fetch(); await route.abort('timedout'); } else await route.continue();
+      if (copies.length === 1) {
+        await route.fetch();
+        await route.abort('timedout');
+      } else await route.continue();
     });
     await second.getByRole('button', { name: 'Salvar minha versão como cópia' }).click();
     await expect(second.getByRole('button', { name: 'Tentar salvar a mesma cópia' })).toBeVisible();
@@ -119,17 +163,22 @@ test('two revision-1 sessions conflict; a lost copy response and reload retry pr
     await expect(second.getByRole('heading', { name: 'Novo mapa — cópia', exact: true })).toBeVisible();
     await expect(canvasText(second, 'Versão local de A')).toBeVisible();
     await expect(second.getByText(`Responsável: ${a.name}`, { exact: false })).toBeVisible();
-    expect(copies).toHaveLength(2); expect(copies[1]).toEqual(copies[0]);
-    await page.reload(); await expect(canvasText(page, 'Versão salva por B')).toBeVisible();
+    expect(copies).toHaveLength(2);
+    expect(copies[1]).toEqual(copies[0]);
+    await page.reload();
+    await expect(canvasText(page, 'Versão salva por B')).toBeVisible();
     await noOverflow(second);
     await second.screenshot({ path: info.outputPath('local-copy-confirmed.png'), fullPage: true });
-  } finally { await other.close(); }
+  } finally {
+    await other.close();
+  }
 });
 
 test('discard confirms explicitly and internal navigation can retain a durable draft', async ({ page }, info) => {
   const { path, request } = await openMap(page);
   await page.route('**/rest/v1/rpc/apply_map_command', (route) => route.abort('internetdisconnected'));
-  await edit(page, 'Versão local a preservar'); await expect(state(page)).toHaveText(/Falha ao salvar/);
+  await edit(page, 'Versão local a preservar');
+  await expect(state(page)).toHaveText(/Falha ao salvar/);
   await page.getByRole('link', { name: 'Mapas', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
@@ -157,12 +206,15 @@ test('discard confirms explicitly and internal navigation can retain a durable d
   await noOverflow(page);
 });
 
-test('unavailable or full storage warns, exports and retries without losing the in-memory edit', async ({ page }, info) => {
+test('unavailable or full storage warns, exports and retries without losing the in-memory edit', async ({
+  page,
+}, info) => {
   await page.addInitScript(() => {
     const original = indexedDB.open.bind(indexedDB);
     sessionStorage.setItem('test-idb-failure', '0');
     indexedDB.open = (...args) => {
-      if (sessionStorage.getItem('test-idb-failure') === '1') throw new DOMException('Storage unavailable', 'QuotaExceededError');
+      if (sessionStorage.getItem('test-idb-failure') === '1')
+        throw new DOMException('Storage unavailable', 'QuotaExceededError');
       return original(...args);
     };
   });
@@ -174,24 +226,41 @@ test('unavailable or full storage warns, exports and retries without losing the 
   await page.screenshot({ path: info.outputPath('storage-failure.png'), fullPage: true });
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar rascunho de emergência' }).click();
-  const file = await download; const json = JSON.parse(await readFile((await file.path())!, 'utf8'));
-  expect(json.format).toBe('mapa-emergency-draft'); expect(json.record.queue[0].payload.text).toBe('Não perder por falta de armazenamento');
+  const file = await download;
+  const json = JSON.parse(await readFile((await file.path())!, 'utf8'));
+  expect(json.format).toBe('mapa-emergency-draft');
+  expect(json.record.queue[0].payload.text).toBe('Não perder por falta de armazenamento');
   await page.evaluate(() => sessionStorage.removeItem('test-idb-failure'));
   // A scheduled checkpoint may recover immediately when storage becomes available.
   // If it removes the button before the click, verify that recovery actually completed.
-  await page.getByRole('button', { name: 'Tentar proteger rascunho' }).click({ timeout: 2000 }).catch(async () => {
-    await expect(page.getByText('Não foi possível proteger o rascunho neste navegador.', { exact: false })).toHaveCount(0);
-  });
-  await expect(page.getByText('Não foi possível proteger o rascunho neste navegador.', { exact: false })).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Tentar proteger rascunho' })
+    .click({ timeout: 2000 })
+    .catch(async () => {
+      await expect(
+        page.getByText('Não foi possível proteger o rascunho neste navegador.', { exact: false }),
+      ).toHaveCount(0);
+    });
+  await expect(page.getByText('Não foi possível proteger o rascunho neste navegador.', { exact: false })).toHaveCount(
+    0,
+  );
   await expect.poll(async () => (await records(page)).length).toBe(1);
   await page.unroute('**/rest/v1/rpc/apply_map_command');
   await page.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
   await expect(state(page)).toHaveText(/Salvo/);
 });
 
-test('expired session isolates the draft, another account cannot see it, deliberate logout exports and erases it', async ({ page }, info) => {
+test('expired session isolates the draft, another account cannot see it, deliberate logout exports and erases it', async ({
+  page,
+}, info) => {
   const { path } = await openMap(page);
-  await page.route('**/rest/v1/rpc/apply_map_command', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ code: 'PGRST303', message: 'JWT expired' }) }));
+  await page.route('**/rest/v1/rpc/apply_map_command', (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'PGRST303', message: 'JWT expired' }),
+    }),
+  );
   await edit(page, 'Rascunho isolado de B');
   await expect(page.getByRole('heading', { name: 'Entre novamente' })).toBeVisible();
   await expect.poll(async () => (await records(page)).length).toBe(1);
@@ -211,7 +280,8 @@ test('expired session isolates the draft, another account cannot see it, deliber
   await page.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
   await expect(state(page)).toHaveText(/Salvo/);
   await page.route('**/rest/v1/rpc/apply_map_command', (route) => route.abort('internetdisconnected'));
-  await edit(page, 'Exportar antes de sair'); await expect(state(page)).toHaveText(/Falha ao salvar/);
+  await edit(page, 'Exportar antes de sair');
+  await expect(state(page)).toHaveText(/Falha ao salvar/);
   await page.getByRole('button', { name: 'Sair', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Sincronizar e sair' }).click();
@@ -220,7 +290,8 @@ test('expired session isolates the draft, another account cannot see it, deliber
   const download = page.waitForEvent('download');
   await dialog.getByRole('button', { name: 'Exportar rascunho e sair' }).click();
   const json = JSON.parse(await readFile((await (await download).path())!, 'utf8'));
-  expect(json.format).toBe('mapa-emergency-draft'); expect(json.record.queue[0].payload.text).toBe('Exportar antes de sair');
+  expect(json.format).toBe('mapa-emergency-draft');
+  expect(json.record.queue[0].payload.text).toBe('Exportar antes de sair');
   await expect(page).toHaveURL(/login$/);
   await expect.poll(async () => (await records(page)).length).toBe(0);
 });
@@ -228,10 +299,14 @@ test('expired session isolates the draft, another account cannot see it, deliber
 test('revoked access hides and purges recovery material and disallows copying', async ({ page }, info) => {
   await openMap(page);
   await page.route('**/rest/v1/rpc/apply_map_command', (route) => route.abort('internetdisconnected'));
-  await edit(page, 'Não expor após revogação'); await expect(state(page)).toHaveText(/Falha ao salvar/);
+  await edit(page, 'Não expor após revogação');
+  await expect(state(page)).toHaveText(/Falha ao salvar/);
   await expect.poll(async () => (await records(page)).length).toBe(1);
   const change = (status: string) => {
-    const result = spawnSync(process.execPath, ['scripts/validation-control.mjs', run!.runId, b.id, status], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const result = spawnSync(process.execPath, ['scripts/validation-control.mjs', run!.runId, b.id, status], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     expect(result.status).toBe(0);
   };
   change('inactive');
@@ -242,15 +317,22 @@ test('revoked access hides and purges recovery material and disallows copying', 
     await expect(page.getByRole('button', { name: 'Salvar minha versão como cópia' })).toHaveCount(0);
     await expect.poll(async () => (await records(page)).length).toBe(0);
     await page.screenshot({ path: info.outputPath('revoked-no-private-draft.png'), fullPage: true });
-  } finally { change('active'); }
+  } finally {
+    change('active');
+  }
 });
 
-test('reload after a committed but lost response replays the identical request before later edits', async ({ page }) => {
+test('reload after a committed but lost response replays the identical request before later edits', async ({
+  page,
+}) => {
   await openMap(page);
   const sent: Record<string, unknown>[] = [];
   await page.route('**/rest/v1/rpc/apply_map_command', async (route) => {
     sent.push(route.request().postDataJSON());
-    if (sent.length === 1) { await route.fetch(); await route.abort('timedout'); } else await route.continue();
+    if (sent.length === 1) {
+      await route.fetch();
+      await route.abort('timedout');
+    } else await route.continue();
   });
   await edit(page, 'Primeiro commit confirmado no servidor');
   await expect(state(page)).toHaveText(/Falha ao salvar/);
@@ -269,11 +351,14 @@ test('reload after a committed but lost response replays the identical request b
   await expect(canvasText(page, 'Texto seguinte ainda local')).toBeVisible();
 });
 
-test('an initial storage-read failure cannot overwrite an unread draft; retry restores it after verification', async ({ page }) => {
+test('an initial storage-read failure cannot overwrite an unread draft; retry restores it after verification', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     const original = indexedDB.open.bind(indexedDB);
     indexedDB.open = (...args) => {
-      if (sessionStorage.getItem('test-initial-read-failure') === '1') throw new DOMException('Storage unavailable', 'SecurityError');
+      if (sessionStorage.getItem('test-initial-read-failure') === '1')
+        throw new DOMException('Storage unavailable', 'SecurityError');
       return original(...args);
     };
   });
